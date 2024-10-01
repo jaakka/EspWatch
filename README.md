@@ -1,1 +1,1 @@
-# EspWatch_harware
+# EspWatch with thirdparty applications
