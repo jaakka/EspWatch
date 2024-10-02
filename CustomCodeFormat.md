@@ -6,15 +6,15 @@
 ### Hardcoded commands
 | Command  | Arg0  | Arg1  | Arg2  | Arg3  | Arg4  | Arg5  | Desc  |
 | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- |
-| io  | write | IO_PIN | $0 - 255$ |  |  |  | Update io output |
+| io  | write | IO_PIN | 0 - 255 |  |  |  | Update io output |
 | io  | read | IO_PIN |  |  |  |  | Returns io value to 0-1023 |
-| lcd  | draw | box | $x$ | $y$ | $width$ | $height$ | Draws box |
-| lcd  | draw | line | $x$ | $y$ | $xx$ | $yy$ | Draws line |
-| lcd  | draw | text | $x$ | $y$ | $xx$ | $yy$ | Draws line |
-| lcd  | set | color | $r$ | $g$ | $b$ |  | Sets draw color |
+| lcd  | draw | box | X | Y | WIDTH | HEIGHT | Draws box |
+| lcd  | draw | line | X | Y | XX | YY | Draws line |
+| lcd  | draw | text | X | Y | XX | YY | Draws line |
+| lcd  | set | color | R | G | B |  | Sets draw color |
 | shutdown  |  |  |  |  |  |  | Power off |
-| delay  | $time$ |  |  |  |  |  | Wait |
-| run  | $script name$ |  |  |  |  |  | run script |
+| delay  | time |  |  |  |  |  | Wait |
+| run  | script name |  |  |  |  |  | run script |
 <br />
 
 ### IO constants (outputs)
