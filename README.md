@@ -14,9 +14,9 @@ ThirdpartyApps folder is for custom apps
 <br />
 
 Hardcoded commands
-| Variable  | Description  |
-| ------------- | ------------- |
-| cmd1  | command |
+| Command  | Argument0  | Argument1  |
+| ------------- | ------------- | ------------- |
+| cmd1  | arg0 | arg1 |
 
 <br />
 
