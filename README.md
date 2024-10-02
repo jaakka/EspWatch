@@ -28,6 +28,9 @@ IO constants (outputs)
 | ------------- | ------------- | ------------- |
 | DEBLED  | Debug led | Analog |
 | LCDLED  | Lcd brightness | Analog |
+| HALLPWR  | Hall sensors power | Digital |
+| GYROPWR  | Gyroscope power | Digital |
+| HEARTRATEPWR  | Heartrate sensor power | Digital |
 
 <br />
 
@@ -36,6 +39,8 @@ IO constants (inputs)
 | ------------- | ------------- | ------------- |
 | BRIGHTNESS | Light sensor voltage output  | Analog |
 | BATTERY | Battery voltage  | Analog |
+| HALL1 | Hall sensor output  | Analog |
+| HALL2 | Hall sensor output  | Analog |
 
 <br />
 
