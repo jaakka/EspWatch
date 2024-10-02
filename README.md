@@ -1,10 +1,10 @@
-# EspWatch with thirdparty applications
+# EspWatch with third party applications
 
 <br />
 
-Dear developers.. please write helpful commit message.
+Dear developers.. please write helpful commit messages.
 
-Harware folder is for esp code.
+Hardware folder is for esp code.
 
 Simulation folder is for custom code language testing.
 
