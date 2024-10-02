@@ -11,14 +11,14 @@ ThirdpartyApps folder is for custom apps
 
 # Custom language rules / format
 
-
+<br />
 
 Hardcoded commands
 | Variable  | Description  |
 | ------------- | ------------- |
 | cmd1  | command |
 
-
+<br />
 
 Hardcoded variables
 | Variable  | Description  |
