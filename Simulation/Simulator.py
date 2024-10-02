@@ -1,3 +1,4 @@
 import script_runner as Runner
 
-Runner.RunScript("startup.jp")
+systemScriptsPath = "SystemScripts"
+Runner.RunScript(str(systemScriptsPath) + "/startup.jp")
