@@ -17,15 +17,30 @@ ThirdpartyApps folder is for custom apps
 <br />
 
 Hardcoded commands
-| Command  | Argument0  | Argument1  |
-| ------------- | ------------- | ------------- |
-| cmd1  | arg0 | arg1 |
+| Command  | Argument0  | Argument1  | Argument2  | Description  |
+| ------------- | ------------- | ------------- | ------------- | ------------- |
+| io  | write | IO_PIN | 0 - 255 | Update io output |
+| io  | read | IO_PIN | Returns io value to 0-1023 |
+<br />
+
+IO constants (outputs)
+| Constant  | Description  | Type  |
+| ------------- | ------------- |
+| deb_led  | Debug led | Analog |
+| lcd_led  | Lcd brightness | Analog |
+
+<br />
+
+IO constants (inputs)
+| Constant  | Description  |
+| ------------- | ------------- |
+|   |  |
 
 <br />
 
 Hardcoded variables
 | Variable  | Description  |
 | ------------- | ------------- |
-| bat_level  | Current battery charge 0-100% |
-| bat_voltage  | Current battery voltage  |
-| bat_max_voltage  | Battery max voltage  |
+| bat_voltage  | Current battery voltage |
+| brightness  | Current lighting |
+| bat_voltage  | Current battery voltage |
