@@ -25,7 +25,7 @@ Hardcoded commands
 
 IO constants (outputs)
 | Constant  | Description  | Type  |
-| ------------- | ------------- |
+| ------------- | ------------- | ------------- |
 | deb_led  | Debug led | Analog |
 | lcd_led  | Lcd brightness | Analog |
 
