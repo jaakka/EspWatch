@@ -63,6 +63,8 @@ All scripts can read/write global variables.
 
 ## Example scripts
 
+<br />
+
 ### Battery level 0-100%
 ```
 $max_voltage$ = 4.7;
@@ -73,6 +75,7 @@ $current_voltage$ = $io_value$ * (5.0 / 1023.0);
 
 %battery_level% = ($current_voltage$ / $max_voltage$) * 100;
 ```
+<br />
 
 ### Lcd brightness control
 ```
