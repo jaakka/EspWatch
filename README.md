@@ -16,6 +16,19 @@ ThirdpartyApps folder is for custom apps
 
 <br />
 
+Global and local variables
+| Format  | Type  |
+| ------------- | ------------- | 
+| $variable$  | Local variable| 
+| %variable%  | Global variable| 
+| $test$  | Local variable| 
+| %test%  | Global variable| 
+
+Local is only for one script.
+All scripts can read/write global variables.
+
+<br />
+
 Hardcoded commands
 | Command  | Argument0  | Argument1  | Argument2  | Description  |
 | ------------- | ------------- | ------------- | ------------- | ------------- |
