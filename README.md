@@ -42,8 +42,6 @@ IO constants (inputs)
 # Example codes
 
 <br />
-Io write 
-> io write LCDLED 255 //Sets lcd backlight to bright.
+io write LCDLED 255 //Sets lcd backlight to bright.
 <br />
-Io read
-> variable = io read BATTERY //Get battery voltage.
+variable = io read BATTERY //Get battery voltage.
