@@ -6,9 +6,9 @@
 ### Global and local variables
 | Format  | Type  |
 | ------------- | ------------- | 
-| \$variable$  | Local variable| 
+| `$variable$`  | Local variable| 
 | %variable%  | Global variable| 
-| \$test$  | Local variable| 
+| `$test$`  | Local variable| 
 | %test%  | Global variable| 
 
 Local is only for one script.
