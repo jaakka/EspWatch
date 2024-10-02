@@ -12,3 +12,7 @@ ThirdpartyApps folder is for custom apps
 # Custom language rules / format
 
 coming soon
+| First Header  | Second Header |
+| ------------- | ------------- |
+| Content Cell  | Content Cell  |
+| Content Cell  | Content Cell  |
