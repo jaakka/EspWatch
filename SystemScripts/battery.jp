@@ -1,0 +1,3 @@
+muuttuja = io read brightness 
+
+jannite = muuttuja * (5.0 / 1023.0)

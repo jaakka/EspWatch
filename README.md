@@ -26,12 +26,28 @@ Hardcoded commands
 IO constants (outputs)
 | Constant  | Description  | Type  |
 | ------------- | ------------- | ------------- |
-| deb_led  | Debug led | Analog |
-| lcd_led  | Lcd brightness | Analog |
+| DEBLED  | Debug led | Analog |
+| LCDLED  | Lcd brightness | Analog |
 
 <br />
 
 IO constants (inputs)
-| Constant  | Description  |
-| ------------- | ------------- |
-| brightness | Light sensor output  |
+| Constant  | Description  | Type  |
+| ------------- | ------------- | ------------- |
+| BRIGHTNESS | Light sensor voltage output  | Analog |
+| BATTERY | Battery voltage  | Analog |
+
+<br />
+
+# Example codes
+
+<br />
+Io write 
+```
+io write LCDLED 255 //Sets lcd backlight to bright.
+```
+<br />
+Io read
+```
+variable = io read BATTERY //Get battery voltage.
+```
