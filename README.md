@@ -14,4 +14,9 @@ ThirdpartyApps folder is for custom apps
 
 ### Fast links
 - [Custom code formating](./CustomCodeFormat.md) ( .jp )
+
 - [Esp hardware code](./Hardware/EspWatch) ( c++ )
+
+- [Simulator code](./Simulation) ( python )
+
+- [Thirdparty apps](./ThirdpartyApps) ( .jp )
