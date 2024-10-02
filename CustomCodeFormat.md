@@ -1,20 +1,7 @@
 
-# Custom language rules / format
 << [Return to readme](./README.md)
-<br />
+# Custom language rules / format
 
-### Global and local variables
-| Format  | Type  |
-| ------------- | ------------- | 
-| `$variable$`  | Local variable| 
-| `%variable%`  | Global variable| 
-| `$test$`  | Local variable| 
-| `%test%`  | Global variable| 
-
-Local is only for one script.
-All scripts can read/write global variables.
-
-<br />
 
 ### Hardcoded commands
 | Command  | Argument0  | Argument1  | Argument2  | Description  |
@@ -51,11 +38,53 @@ All scripts can read/write global variables.
 
 ### IO Write
 ```
-io write LCDLED 255 //Sets lcd backlight to bright.
+io write LCDLED 255; //Sets lcd backlight to bright.
 ```
 <br />
 
 ### IO Read
 ```
-variable = io read BATTERY //Get battery voltage. 
+$variable$ = io read BATTERY; //Get battery voltage. 
+```
+<br />
+
+## Global and local variables
+| Format  | Type  |
+| ------------- | ------------- | 
+| `$variable$`  | Local variable| 
+| `%variable%`  | Global variable| 
+| `$test$`  | Local variable| 
+| `%test%`  | Global variable| 
+
+Local is only for one script.
+All scripts can read/write global variables.
+
+<br />
+
+## Example scripts
+
+### Battery level 0-100%
+```
+$max_voltage$ = 4.7;
+
+$io_value$ = io read BATTERY; 
+
+$current_voltage$ = $io_value$ * (5.0 / 1023.0);
+
+%battery_level% = ($current_voltage$ / $max_voltage$) * 100;
+```
+
+### Lcd brightness control
+```
+$max_voltage$ = 3;
+
+$io_value$ = io read BRIGHTNESS;
+
+$current_voltage$ = $io_value$ * (5.0 / 1023.0);
+
+$brightness$ = ($current_voltage$ / $max_voltage$) * 255;
+
+$lcdbrightness$ = 255 - $brightness$;
+
+io write LCDLED $lcdbrightness$;
 ```
