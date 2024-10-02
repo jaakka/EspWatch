@@ -34,13 +34,4 @@ IO constants (outputs)
 IO constants (inputs)
 | Constant  | Description  |
 | ------------- | ------------- |
-|   |  |
-
-<br />
-
-Hardcoded variables
-| Variable  | Description  |
-| ------------- | ------------- |
-| bat_voltage  | Current battery voltage |
-| brightness  | Current lighting |
-| bat_voltage  | Current battery voltage |
+| brightness | Light sensor output  |
