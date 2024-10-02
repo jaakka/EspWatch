@@ -11,8 +11,15 @@ ThirdpartyApps folder is for custom apps
 
 # Custom language rules / format
 
-coming soon
-| First Header  | Second Header |
+Hardcoded commands
+| Command  | argument0  | argument1  | argument2|
 | ------------- | ------------- |
-| Content Cell  | Content Cell  |
-| Content Cell  | Content Cell  |
+| cmd1 | arg0  | arg1  | arg2  |
+| cmd2 | arg0  | arg1  | arg2  |
+
+Hardcoded variables
+| Variable  | Description  |
+| ------------- | ------------- |
+| bat_level  | Current battery charge 0-100% |
+| bat_voltage  | Current battery voltage  |
+| bat_max_voltage  | Battery max voltage  |
