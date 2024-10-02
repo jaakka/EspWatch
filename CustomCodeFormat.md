@@ -4,11 +4,14 @@
 
 
 ### Hardcoded commands
-| Command  | Argument0  | Argument1  | Argument2  | Description  |
-| ------------- | ------------- | ------------- | ------------- | ------------- |
-| io  | write | IO_PIN | 0 - 255 | Update io output |
-| io  | read | IO_PIN | Returns io value to 0-1023 |
-
+| Command  | Arg0  | Arg1  | Arg2  | Arg3  | Arg4  | Arg5  | Desc  |
+| ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- |
+| io  | write | IO_PIN | 0 - 255 |  |  |  | Update io output |
+| io  | read | IO_PIN |  |  |  |  | Returns io value to 0-1023 |
+| lcd  | draw | box | x | y | width | height | Draws box |
+| lcd  | draw | line | x | y | xx | yy | Draws line |
+| lcd  | draw | text | x | y | xx | yy | Draws line |
+| lcd  | set | color | R | G | B |  | Sets draw color |
 <br />
 
 ### IO constants (outputs)
@@ -36,15 +39,45 @@
 
 <br />
 
-### IO Write
+### IO control
+
+### Write
 ```
 io write LCDLED 255; //Sets lcd backlight to bright.
 ```
-<br />
 
-### IO Read
+### Read
 ```
 $variable$ = io read BATTERY; //Get battery voltage. 
+```
+<br />
+<br />
+
+### LCD control
+
+### Set color
+```
+lcd set color 255 255 255; //Set draw color to white
+```
+
+### Draw box
+```
+lcd draw box 32 32 0 0; //Draw box to top left corner.
+```
+
+### Draw line
+```
+lcd draw line 0 0 32 0 //Draw 32px long vertical line
+```
+
+### Draw text
+```
+lcd draw text "text" 100 100 3; //Draw text with "3" size
+```
+
+### Draw text with variables
+```
+lcd draw text %variable% %x% %y% 3; //Draw text with "3" size
 ```
 <br />
 
@@ -68,26 +101,22 @@ All scripts can read/write global variables.
 ### Battery level 0-100%
 ```
 $max_voltage$ = 4.7;
-
 $io_value$ = io read BATTERY; 
-
-$current_voltage$ = $io_value$ * (5.0 / 1023.0);
-
-%battery_level% = ($current_voltage$ / $max_voltage$) * 100;
+$calc$ = 5.0 / 1023.0;
+$current_voltage$ = $io_value$ * $calc$;
+$calc2$ = $current_voltage$ / $max_voltage$;
+%battery_level% = $calc2$ * 100;
 ```
 <br />
 
 ### Lcd brightness control
 ```
 $max_voltage$ = 3;
-
 $io_value$ = io read BRIGHTNESS;
-
-$current_voltage$ = $io_value$ * (5.0 / 1023.0);
-
-$brightness$ = ($current_voltage$ / $max_voltage$) * 255;
-
+$calc$ = 5.0 / 1023.0;
+$current_voltage$ = $io_value$ * $calc$;
+$brightness2$ = $current_voltage$ / $max_voltage$;
+$brightness$ = $brightness2$ * 255;
 $lcdbrightness$ = 255 - $brightness$;
-
 io write LCDLED $lcdbrightness$;
 ```
