@@ -1,5 +1,7 @@
 # EspWatch with thirdparty applications
 
+<br />
+
 Dear developers.. please write helpful commit message.
 
 Harware folder is for esp code.
@@ -8,6 +10,7 @@ Simulation folder is for custom code language testing.
 
 ThirdpartyApps folder is for custom apps
 
+<br />
 
 # Custom language rules / format
 
