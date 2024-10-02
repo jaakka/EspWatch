@@ -7,9 +7,9 @@
 | Format  | Type  |
 | ------------- | ------------- | 
 | `$variable$`  | Local variable| 
-| %variable%  | Global variable| 
+| `%variable%`  | Global variable| 
 | `$test$`  | Local variable| 
-| %test%  | Global variable| 
+| `%test%`  | Global variable| 
 
 Local is only for one script.
 All scripts can read/write global variables.
