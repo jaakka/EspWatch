@@ -21,6 +21,7 @@ Hardcoded commands
 | ------------- | ------------- | ------------- | ------------- | ------------- |
 | io  | write | IO_PIN | 0 - 255 | Update io output |
 | io  | read | IO_PIN | Returns io value to 0-1023 |
+
 <br />
 
 IO constants (outputs)
@@ -28,6 +29,9 @@ IO constants (outputs)
 | ------------- | ------------- | ------------- |
 | DEBLED  | Debug led | Analog |
 | LCDLED  | Lcd brightness | Analog |
+| HALLPWR  | Hall sensors power | Digital |
+| GYROPWR  | Gyroscope power | Digital |
+| HEARTRATEPWR  | Heartrate sensor power | Digital |
 
 <br />
 
@@ -36,6 +40,8 @@ IO constants (inputs)
 | ------------- | ------------- | ------------- |
 | BRIGHTNESS | Light sensor voltage output  | Analog |
 | BATTERY | Battery voltage  | Analog |
+| HALL1 | Hall sensor output  | Analog |
+| HALL2 | Hall sensor output  | Analog |
 
 <br />
 
