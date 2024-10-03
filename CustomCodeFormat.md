@@ -51,7 +51,7 @@ io write LCDLED 255; //Sets lcd backlight to bright.
 
 ### Read
 ```
-$variable$ = io read BATTERY; //Get battery voltage. 
+FLOAT $variable$ = io read BATTERY; //Get battery voltage. 
 ```
 <br />
 <br />
@@ -82,6 +82,7 @@ lcd draw text "text" 100 100 3; //Draw text with "3" size
 ```
 lcd draw text %variable% %x% %y% 3; //Draw text with "3" size
 ```
+note: %x% & %y% need be float or integer
 <br />
 
 ## Global and local variables
@@ -95,6 +96,42 @@ lcd draw text %variable% %x% %y% 3; //Draw text with "3" size
 Local is only for one script.
 All scripts can read/write global variables.
 
+## How declare variables / How create new variable
+
+#### Without values
+|  Type |  Variable | 
+| ------------- | ------------- |
+| INT | %variable% | 
+| FLOAT | %variable% | 
+| STR | %variable% | 
+| BOOL | %variable% | 
+
+#### With values
+|  Type |  Variable | Value
+| ------------- | ------------- | ------------- |
+| INT | %variable% | 32
+| FLOAT | %variable% | 32.2
+| STR | %variable% | "sdasf"
+| BOOL | %variable% | true/false
+
+## Array usage
+
+#### Without values
+| |  Indexes |  Type | Variable 
+| ------------- | ------------- | ------------- | ------------- |
+| ARRAY | 3 | INT | %variable% 
+| ARRAY | 3 | FLOAT | %variable% 
+| ARRAY | 3 | STR | %variable% 
+| ARRAY | 3 | BOOL | %variable% 
+
+#### With values
+| |  Indexes |  Type | Variable | value0 | value1 | value2
+| ------------- | ------------- | ------------- | ------------- | ------------- | ------------- | ------------- |
+| ARRAY | 3 | INT | %variable% | 32 | 43 | 53
+| ARRAY | 3 | FLOAT | %variable% | 32.2 | 43.54 | 53.65
+| ARRAY | 3 | STR | %variable% | "sdasf" | "test" | "lol"
+| ARRAY | 3 | BOOL | %variable% | false | true | false
+
 <br />
 
 ## Example scripts
@@ -103,23 +140,18 @@ All scripts can read/write global variables.
 
 ### Battery level 0-100%
 ```
-$max_voltage$ = 4.7;
-$io_value$ = io read BATTERY; 
-$calc$ = 5.0 / 1023.0;
-$current_voltage$ = $io_value$ * $calc$;
-$calc2$ = $current_voltage$ / $max_voltage$;
-%battery_level% = $calc2$ * 100;
+FLOAT $max_voltage$ = 4.7;
+INT $io_value$ = io read BATTERY; 
+FLOAT $current_voltage$ = $io_value$ * ( 5.0 / 1023.0 );
+INT %battery_level% = ( $current_voltage$ / $max_voltage$ ) * 100;
 ```
 <br />
 
 ### Lcd brightness control
 ```
-$max_voltage$ = 3;
-$io_value$ = io read BRIGHTNESS;
-$calc$ = 5.0 / 1023.0;
-$current_voltage$ = $io_value$ * $calc$;
-$brightness2$ = $current_voltage$ / $max_voltage$;
-$brightness$ = $brightness2$ * 255;
-$lcdbrightness$ = 255 - $brightness$;
-io write LCDLED $lcdbrightness$;
+FLOAT $max_voltage$ = 3;
+INT $io_value$ = io read BRIGHTNESS;
+FLOAT $current_voltage$ = $io_value$ * ( 5.0 / 1023.0 );
+INT $brightness$ = ( $current_voltage$ / $max_voltage$ ) * ( 255 - ( $brightness2$ * 255 ) );
+io write LCDLED $brightness$;
 ```

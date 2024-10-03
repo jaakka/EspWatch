@@ -22,7 +22,6 @@ def CutTrashFromCommand(command:str):
 def RunCmd(command:str):
 
     cmd = CutTrashFromCommand(command)
-    print(cmd)
     commandWithArgs = cmd.split(' ')
     cmd = commandWithArgs[0]
     commandWithArgs.pop(0)
@@ -53,9 +52,11 @@ def RunCmd(command:str):
 
         case _:
             if( AreVariable(cmd) ):
-                if(args[0] == "set"):
+                if(args[0] == "="):
                     try:
                         newValue = int(GetValue(args[1]))
+
+                        #if args[2] !=  and NotCalc(args[2])
                         SetValue(cmd,newValue)
                         print(localVars)
                     except:
@@ -130,3 +131,6 @@ def AddValue(string:str, value:str):
         localVars.append(string)
         localValue.append(value)
         print(f"added new local variable {string}")
+
+def NotCalc(arg:str):
+    return arg != "*" and arg != "/" and arg != "^" and arg != "+" and arg != "-"

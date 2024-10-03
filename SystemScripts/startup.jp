@@ -1,5 +1,60 @@
-%testvariable% set 32; // this is comment
-io write LCDLED %testvariable%; //Sets lcd backlight to bright.
-%testvariable% set 212; // this is comment
-io write LCDLED %testvariable%; //Sets lcd backlight to bright.
-run test;
+
+BOOL %testbool%; // New local boolean variable without value
+%testint% = false; // Set value
+
+BOOL %testbool% = true; // New local boolean variable with value 
+
+ARRAY 3 BOOL %testbool%; // New local empty boolean array with 3 index
+
+
+
+INT %testint%; // New local integer variable without value
+%testint% = 324; // Set value
+
+INT %testint% = 32; // New local integer variable with value 
+
+
+
+
+FLOAT $testint$; // New local float variable without value
+$testint$ = 43.23; // Set value
+
+FLOAT %testint% = 43.23; // New local float variable with value 
+
+
+STR $testint$; // New local string variable without value
+$testint$ = "test" // Set value
+
+STR %testint% = "test"; // New local string variable with value 
+
+
+
+ARRAY 3 INT %array%; // New local integer array without values
+%array% = 23 54 34
+
+ARRAY 3 INT %array% = 23 54 34; // New local integer array with values
+
+
+
+%testint% = 345 
+
+IF (boolean or condition)
+
+ENDIF
+
+
+
+IF (boolean or condition)
+
+ELSE
+
+ENDIF
+
+
+
+WHILE (boolean or condition)
+
+
+ENDFOR
+
+

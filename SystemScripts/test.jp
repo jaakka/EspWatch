@@ -1,2 +1,7 @@
 delay 1000;
 io write LCDLED %testvariable%;
+
+io write LCDLED %testvariable%; //Sets lcd backlight to bright.
+%testvariable% set 212; // this is comment
+io write LCDLED %testvariable%; //Sets lcd backlight to bright.
+run test;
