@@ -2,6 +2,69 @@
 #define HEARTRATEFILTERS_H
 
 /**
+ * @brief Statistic block for min/nax/avg
+ */
+class MinMaxAvgStatistic {
+  float min_;
+  float max_;
+  float sum_;
+  int count_;
+public:
+  /**
+   * @brief Initialize the Statistic block
+   */
+  MinMaxAvgStatistic() :
+    min_(NAN),
+    max_(NAN),
+    sum_(0),
+    count_(0){}
+
+  /**
+   * @brief Add value to the statistic
+   */
+  void process(float value) {  
+    min_ = isnan(min_) ? value : min(min_, value);
+    max_ = isnan(max_) ? value : max(max_, value);
+    sum_ += value;
+    count_++;
+  }
+
+  /**
+   * @brief Resets the stored values
+   */
+  void reset() {
+    min_ = NAN;
+    max_ = NAN;
+    sum_ = 0;
+    count_ = 0;
+  }
+
+  /**
+   * @brief Get Minimum
+   * @return Minimum Value
+   */
+  float minimum() const {
+    return min_;
+  }
+
+  /**
+   * @brief Get Maximum
+   * @return Maximum Value
+   */
+  float maximum() const {
+    return max_;
+  }
+
+  /**
+   * @brief Get Average
+   * @return Average Value
+   */
+  float average() const {
+    return sum_/count_;
+  }
+};
+
+/**
  * @brief High Pass Filter 
  */
 class HighPassFilter {

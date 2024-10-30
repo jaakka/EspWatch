@@ -1,4 +1,5 @@
-void loop()
-{
+void loop() {
   GyroscopeUpdate();
+  LcdUpdate();
+  PulseLoop();
 }

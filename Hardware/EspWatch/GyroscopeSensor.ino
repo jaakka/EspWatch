@@ -4,6 +4,6 @@ void GyroscopeUpdate()
   {
     GYRO.readGyroscope(gyro_x, gyro_y, gyro_z);
     GYRO.readAcceleration(gyro_ax,gyro_ay,gyro_az);
-    //Serial.println(String(gyro_x) + ", "+String(gyro_y) + ", "+String(gyro_z));
+    Serial.println(String(gyro_ax) + ", "+String(gyro_ay) + ", "+String(gyro_az));
   }
 }
