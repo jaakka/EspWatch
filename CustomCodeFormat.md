@@ -26,6 +26,10 @@
 | GYROPWR  | Gyroscope power | Digital |
 | HEARTRATEPWR  | Heartrate sensor power | Digital |
 
+![image](https://github.com/user-attachments/assets/afe454f0-fb28-470c-bf95-afd7a642622a)
+<br />
+debug led location "DEBLED"
+
 <br />
 
 ### IO constants (inputs)
