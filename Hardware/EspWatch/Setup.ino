@@ -19,7 +19,9 @@ void setup()
   { 
     Serial.println("HeartRate sensor initialized");
   }
-
+  BtnsInit();
   LCD.begin();
   LcdStart();
+
+  Serial.begin(9600);
 }

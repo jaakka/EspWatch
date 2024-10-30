@@ -7,6 +7,11 @@
 #include "HeartRateFilters.h" 
 #define GYRO IMU
 
+#define LCD_BACKLIGHT 32
+#define VOLTAGE 35
+#define BTN_DOWN 4
+#define BTN_UP 23
+
 // HEARTRATE SENSOR 
 // Sensor (adjust to your sensor type)
 MAX30105 HEARTRATE;
@@ -26,7 +31,7 @@ const float kHighPassCutoff = 0.5;
 
 // Averaging
 const bool kEnableAveraging = true;
-const int kAveragingSamples = 50;
+const int kAveragingSamples = 8;  //Options: 1, 2, 4, 8, 16, 32
 const int kSampleThreshold = 5;
 
 //  LCD
