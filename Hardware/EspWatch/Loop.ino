@@ -1,4 +1,4 @@
 void loop()
 {
-  
+  GyroscopeUpdate();
 }
