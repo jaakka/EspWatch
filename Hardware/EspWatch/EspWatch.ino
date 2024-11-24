@@ -5,6 +5,9 @@
 #include <TFT_eSPI.h> // Lcd
 #include <MAX3010x.h> // Heartrate
 #include "HeartRateFilters.h" 
+#include <Adafruit_PCF8591.h>
+#include <elapsedMillis.h>
+
 #define GYRO IMU
 
 #define LCD_BACKLIGHT 32
@@ -24,7 +27,7 @@ int avg_spo=0, spo=0;
 
 // HEARTRATE SENSOR 
 // Sensor (adjust to your sensor type)
-MAX30105 HEARTRATE;
+MAX30102 HEARTRATE;
 const auto kSamplingRate = HEARTRATE.SAMPLING_RATE_3200SPS;
 const float kSamplingFrequency = 400.0;
 
@@ -82,3 +85,20 @@ TFT_eSPI LCD  = TFT_eSPI();      // Invoke custom library
 
 // Gyroscope
 float gyro_ax , gyro_ay, gyro_az, gyro_x, gyro_y, gyro_z;
+
+// PCF8591
+Adafruit_PCF8591 pcf = Adafruit_PCF8591();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
