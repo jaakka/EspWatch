@@ -9,12 +9,10 @@ void PCF8591_Init()
 }
 
 
-elapsedMillis luku;
-
-
 void PCF8591_Loop()
 {
-  if (luku >= 200)
+  unsigned long currentMillis = millis();
+  if (currentMillis - last_pcf >= 200)
   {
     Serial.print("Hall1:");
     Serial.print(pcf.analogRead(0));
@@ -28,8 +26,7 @@ void PCF8591_Loop()
     Serial.print(pcf.analogRead(2));
 
     Serial.println("");
-
-    luku = 0;
+    last_pcf = millis();
   }
 }
 

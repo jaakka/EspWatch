@@ -4,18 +4,24 @@
 #include <Arduino_LSM6DS3.h> // Gyroscope 
 #include <TFT_eSPI.h> // Lcd
 #include <MAX3010x.h> // Heartrate
+#include <CST816S.h>  // Touchscreen
 #include "HeartRateFilters.h" 
 #include <Adafruit_PCF8591.h>
-#include <elapsedMillis.h>
 
-#define GYRO IMU
-
+#define GYRO IMU // Osoite muuttuu lopullisella tytärlevyllä B > A
 #define LCD_BACKLIGHT 32
 #define VOLTAGE 35
 #define BTN_DOWN 4
 #define BTN_UP 23
 
+#define TOUCH_SDA 21
+#define TOUCH_SCL 22
+#define TOUCH_RST 4
+#define TOUCH_INT 19
+
 unsigned long last_write;
+unsigned long last_pcf;
+
 String last_print = "";
 String last_print2 = "";
 String last_print3 = "";
@@ -78,27 +84,13 @@ float last_diff = NAN;
 bool crossed = false;
 long crossed_time = 0;
 
-
-
 //  LCD
 TFT_eSPI LCD  = TFT_eSPI();      // Invoke custom library
+
+CST816S touch(TOUCH_SDA, TOUCH_SCL, TOUCH_RST, TOUCH_INT);
 
 // Gyroscope
 float gyro_ax , gyro_ay, gyro_az, gyro_x, gyro_y, gyro_z;
 
 // PCF8591
 Adafruit_PCF8591 pcf = Adafruit_PCF8591();
-
-
-
-
-
-
-
-
-
-
-
-
-
-

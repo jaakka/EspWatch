@@ -32,8 +32,7 @@ void setup()
     delay(10);
   }
 
-
-
+  touch.begin();
   BtnsInit();
   LCD.begin();
   LcdStart();
