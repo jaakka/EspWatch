@@ -1,19 +1,27 @@
 void setup()
 {
+  LCD.begin();
   Serial.begin(9600);
   while (!Serial) {}
 
+  LcdBootScreen("gyroscope",0);
   int allowed_try_times = 100;
-  while(!GYRO.begin() && allowed_try_times > 0) // Force gyroscope
+  while(true) // Force gyroscope
   {
+    if(allowed_try_times == 0){LcdBootScreen("fail",2); break;}
+    if(GYRO.begin()){LcdBootScreen("ok",1); break;}
     allowed_try_times--;
     Serial.println("Failed to initialize IMU!");
     delay(10);
   }
 
+
+  LcdBootScreen("heartrate",0);
   allowed_try_times = 100;
-  while(!HEARTRATE.begin() && allowed_try_times > 0)
+  while(true)
   {
+    if(allowed_try_times == 0){LcdBootScreen("fail",2); break;}
+    if(HEARTRATE.begin()){LcdBootScreen("ok",1); break;}
     allowed_try_times--;
     Serial.println("Failed to initialize HeartRate Sensor!");
     delay(10);
@@ -24,17 +32,21 @@ void setup()
     Serial.println("HeartRate sensor initialized");
   }
 
+  LcdBootScreen("pcf",0);
+
   allowed_try_times = 100;
-  while(!pcf.begin() && allowed_try_times > 0)
+  while(true)
   {
+    if(allowed_try_times == 0){LcdBootScreen("fail",2); break;}
+    if(pcf.begin()){LcdBootScreen("ok",1); break;}
     allowed_try_times--;
     Serial.println("Failed to initialize PCF8591!");
     delay(10);
   }
-
+  LcdBootScreen("touch",0);
   touch.begin();
   BtnsInit();
-  LCD.begin();
+  
   LcdStart();
   PCF8591_Init();
   HallInit();

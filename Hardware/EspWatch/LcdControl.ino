@@ -1,9 +1,19 @@
+void LcdBootScreen(String device, int color)
+{
+  LCD.setRotation(3);
+  LCD.fillScreen(TFT_WHITE);
+  LCD.setTextColor(TFT_BLACK, TFT_WHITE);
+  LCD.drawCentreString("Starting..",120,45 + 30*0,4);
+  if(color == 0){LCD.setTextColor(TFT_WHITE, TFT_BLACK);}
+  if(color == 1){LCD.setTextColor(TFT_WHITE, TFT_GREEN);}
+  if(color == 2){LCD.setTextColor(TFT_WHITE, TFT_RED);}
+  LCD.drawCentreString(device,120,80 + 30*0,4);
+}
+
 void LcdStart()
 {
-    LCD.setRotation(3);
-    LCD.fillScreen(TFT_WHITE);
-    LCD.drawCentreString("Gyroscope",120,15 + 30*0,4);
-    LCD.drawCentreString("Heartrate",120,15 + 30*3,4);
+  LCD.setRotation(3);
+  LCD.fillScreen(TFT_WHITE);
 }
 
 void LcdUpdate()
