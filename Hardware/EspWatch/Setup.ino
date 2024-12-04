@@ -15,6 +15,7 @@ void setup()
     delay(10);
   }
 
+  delay(500);
 
   LcdBootScreen("heartrate",0);
   allowed_try_times = 100;
@@ -32,6 +33,8 @@ void setup()
     Serial.println("HeartRate sensor initialized");
   }
 
+  delay(500);
+
   LcdBootScreen("pcf",0);
 
   allowed_try_times = 100;
@@ -43,6 +46,7 @@ void setup()
     Serial.println("Failed to initialize PCF8591!");
     delay(10);
   }
+  delay(500);
   LcdBootScreen("touch",0);
   touch.begin();
   BtnsInit();
