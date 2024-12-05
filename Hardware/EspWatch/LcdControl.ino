@@ -18,26 +18,43 @@ void LcdStart()
 
 void LcdUpdate()
 {
-   if (last_write + 100 < millis()) {
+  if (last_write + 100 < millis()) {
     last_write = millis();
 
     LCD.setTextColor(TFT_WHITE, TFT_WHITE);
-    LCD.drawString(last_print, 20, 15 + 30*1,4);
-    LCD.drawString(last_print2, 20, 15 + 30*2,4);
-    LCD.drawString(last_print3, 15, 15 + 30*4,4);
-    LCD.drawString(last_print4, 50, 15 + 30*5,4);
+    LCD.fillScreen(TFT_WHITE);
 
-    LCD.setTextColor(TFT_BLACK, TFT_WHITE);
-    last_print = String(gyro_ax) + ", "+String(gyro_ay) + ", "+String(gyro_az);
-    LCD.drawString(last_print, 20, 15 + 30*1,4);
+    if (current_screen == 0) {
+      // Screen 1 Gyroscope
+      LCD.drawString(last_print1, 40, 15 + 30*4, 4);
+      LCD.drawString(last_print2, 40, 15 + 30*5, 4);
+      LCD.drawString(last_print3, 50, 15 + 30*2, 4);
 
-    last_print2 = String(gyro_x) + ", "+String(gyro_y) + ", "+String(gyro_z);
-    LCD.drawString(last_print2, 20, 15 + 30*2,4);
+      LCD.setTextColor(TFT_BLACK, TFT_WHITE);
+      last_print1 = String(gyro_ax) + ", " + String(gyro_ay) + ", " + String(gyro_az);
+      LCD.drawString(last_print1, 40, 15 + 30*4, 4);
 
-    last_print3 = String(pulse)+"bpm / AVG: "+String(avg_pulse)+"bpm";
-    LCD.drawString(last_print3, 15, 15 + 30*4,4);
+      last_print2 = String(gyro_x) + ", " + String(gyro_y) + ", " + String(gyro_z);
+      LCD.drawString(last_print2, 40, 15 + 30*5, 4);
 
-    last_print4 = "spo2: "+String(spo)+" / "+String(avg_spo)+"%";
-    LCD.drawString(last_print4, 50, 15 + 30*5,4);
+      last_print3 = "Gyroscope";
+      LCD.drawString(last_print3, 50, 15 + 30*2, 4);
+    } 
+    else if (current_screen == 1) {
+      // Screen 2 Heartrate
+      LCD.drawString(last_print4, 15, 15 + 30*4, 4);
+      LCD.drawString(last_print5, 40, 15 + 30*5, 4);
+      LCD.drawString(last_print6, 50, 15 + 30*2, 4);
+
+      LCD.setTextColor(TFT_BLACK, TFT_WHITE);
+      last_print4 = String(pulse) + "bpm / AVG: " + String(avg_pulse) + "bpm";
+      LCD.drawString(last_print4, 15, 15 + 30*4, 4);
+
+      last_print5 = "spo2: " + String(spo) + " / " + String(avg_spo) + "%";
+      LCD.drawString(last_print5, 40, 15 + 30*5, 4);
+
+      last_print6 = "Heartrate";
+      LCD.drawString(last_print6, 50, 15 + 30*2, 4);
+    }
   }
 }
