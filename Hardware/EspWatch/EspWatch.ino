@@ -22,14 +22,19 @@
 unsigned long last_write;
 unsigned long last_pcf;
 
-String last_print = "";
+String last_print1 = "";
 String last_print2 = "";
 String last_print3 = "";
 String last_print4 = "";
+String last_print5 = "";
+String last_print6 = "";
 
 int avg_pulse=0, pulse=0;
 int avg_red=0, red=0;
 int avg_spo=0, spo=0;
+
+// Which screen is currently shown
+int current_screen = 0;
 
 // HEARTRATE SENSOR 
 // Sensor (adjust to your sensor type)
