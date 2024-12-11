@@ -10,6 +10,7 @@ void LCD::init(){
     Serial.println("LCD init");
     tft.begin();
     tft.setRotation(0); // Varmista, että näytön suunta on oikein
+     // näytön nopeutta nostettiin 40000000
     tft.fillScreen(TFT_BLACK);
 }
 
