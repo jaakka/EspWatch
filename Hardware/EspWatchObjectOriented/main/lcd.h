@@ -6,6 +6,7 @@
 class LCD {
 public:
     LCD();
+    void init();
     void drawText(String text, int x, int y, int size, int color);
     void drawBox(int x, int y, int w, int h, int color);
     void drawCircle(int x, int y, int r, int color);

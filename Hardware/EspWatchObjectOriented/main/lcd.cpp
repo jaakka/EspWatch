@@ -4,18 +4,19 @@
 
 #define LCD_BACKLIGHT 32
 
-LCD::LCD() : tft(TFT_eSPI()) {
+LCD::LCD() : tft(TFT_eSPI()) {}
+
+void LCD::init(){
     Serial.println("LCD init");
     tft.begin();
-    tft.setRotation(3); // Varmista, että näytön suunta on oikein
+    tft.setRotation(0); // Varmista, että näytön suunta on oikein
     tft.fillScreen(TFT_BLACK);
 }
 
 void LCD::drawText(String text, int x, int y, int size, int color) {
-    tft.setTextSize(size);
     tft.setTextColor(color);
-    tft.setCursor(x, y);
-    tft.print(text);
+   // tft.setTextDatum(TR_DATUM); 
+    tft.drawString(text,x,y,size);
 }
 
 void LCD::drawBox(int x, int y, int w, int h, int color) {

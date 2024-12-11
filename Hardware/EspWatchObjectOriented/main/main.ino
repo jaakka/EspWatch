@@ -3,6 +3,10 @@
 LCD lcd;
 
 void setup() {
+    
+    //Setup screen
+    lcd.init();
+
     //Boot screen
     lcd.fillScreen(TFT_WHITE);
   
