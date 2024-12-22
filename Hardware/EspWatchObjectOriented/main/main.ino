@@ -1,5 +1,6 @@
 #include <TFT_eSPI.h>
 #include "touch.h"
+#include "heartrate.h"
 #include <TimeLib.h> // (Time by Michael Margolis).
 
 #define SCREEN_WIDTH 240
@@ -9,34 +10,24 @@
 TFT_eSPI lcd = TFT_eSPI();
 TFT_eSprite frame = TFT_eSprite(&lcd);
 TOUCH touch;
-
-uint16_t menuColors[] = {
-  0x8410,
-  0x8410,
-  0x03BF, // Harmaa
-  0x8410, // Harmaa
-  0x8410, // Harmaa
-  0x8410, // Harmaa
-  0x8410, // Harmaa
-  0x8410, // Harmaa
-  0x8410, // Harmaa
-  0x8410
-};
+HEARTRATE heartrate;
+int pulseAnim = 0;
 
 enum App
 {
   HOME = 0,
   MENU = 1,
-  SETTINGS = 2
+  SETTINGS = 2,
+  PULSE = 3
 };
 
 bool openApp = true;
 int scaleAnim = 15;
 int selectPosX = -1, selectPosY = -1;
-int menu_x = 120, menu_y = -50, next_app = -1;
+int menu_x = 55, menu_y = 50, next_app = -1;
 App application = HOME;
-int selectedApplication = 2;
-int near_app_x = 120, near_app_y = -50; 
+int selectedApplication = 4;
+int near_app_x = 55, near_app_y = 50; 
 bool userWake = false;
 int touchStartX = 0;
 int touchStartY = 0;
@@ -48,15 +39,32 @@ void setup() {
   Serial.begin(115200);
   touch.init();
   lcd.begin();
+  int trytimes = 100;
+  while(true){
+    if(heartrate.begin()){break;}else{if(trytimes>0){trytimes--;}else{break;}}
+  }
   lcd.setRotation(0);
   lcd.fillScreen(0);
   frame.createSprite(SCREEN_WIDTH, SCREEN_HEIGHT, TFT_TRANSPARENT);
   last_release = millis(); 
-  setTime(13, 15, 00, 1, 12, 2024);
+  setTime(0, 0, 00, 1, 12, 2024);
+  heartrate.enableSensor();
 }
 
 void loop() {
-  //if(openApp && scaleAnim < 15 && userWake){scaleAnim++;}else{if(application == MENU){application = HOME;}}
+  heartrate.loop();
+
+  if(heartrate.sensorEnabled && heartrate.pulseDetected() && (application == PULSE || application == MENU))
+  {
+    if(pulseAnim > 0)
+    {
+      pulseAnim--;
+    }
+    else
+    {
+      pulseAnim=15;
+    }
+  }
 
   if(openApp) {
     if(scaleAnim < 15) {
@@ -64,9 +72,13 @@ void loop() {
     }else{
       if(application == MENU)
       {
-        if(selectedApplication == 2)
+        if(selectedApplication == 4)
         {
           application = HOME;
+        }
+        else if(selectedApplication == 5)
+        {
+          application = PULSE;
         }
       }
     }
@@ -92,6 +104,11 @@ void loop() {
     handleApplicationMenuTouch(x_offset, y_offset, app_size);
     drawApplicationMenu(x_offset, y_offset, app_size);
   }
+  else if(application == PULSE)
+  {
+    drawApplicationPulse();
+    handleApplicationPulse();
+  }
   frame.pushSprite(0,0);
 }
 
@@ -102,6 +119,22 @@ uint8_t rgbTo8Bit(uint8_t red, uint8_t green, uint8_t blue) {
   return (red << 5) | (green << 2) | blue;
 }
 
+uint16_t rgbTo16Bit(uint8_t red, uint8_t green, uint8_t blue) {
+  red = (red >> 3) & 0x1F;       // 5 bit red
+  green = (green >> 2) & 0x3F;   // 6 bit green
+  blue = (blue >> 3) & 0x1F;     // 5 bit blue
+  return (red << 11) | (green << 5) | blue;
+}
+void handleApplicationPulse() {
+  if(touch.userSwipeRight()) {
+    application = MENU;
+    openApp = false;
+    Serial.println("close app");
+  }
+
+
+}
+
 void handleApplicationHomeTouch() {
   if(touch.userSwipeRight()) {
     application = MENU;
@@ -110,51 +143,75 @@ void handleApplicationHomeTouch() {
   }
 }
 
-void drawApplicationHome() {
-  //frame.fillSmoothCircle(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, SCREEN_WIDTH/2, 0x0210, 0x0210);
-  frame.fillSmoothCircle(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, SCREEN_WIDTH/2, 0x03BF, 0x03BF);
-  //tässä kohtaa pitäisi piirtää kehälle 12 viivaa niinkuin analogisessa kellossa vaalean kehän sisään
-  for(int i = 0; i < 12; i++) {
-  float angle = i * 30;
-  float x1 = cos(angle * PI / 180) * (SCREEN_WIDTH/2 ) + SCREEN_WIDTH/2;
-  float y1 = sin(angle * PI / 180) * (SCREEN_HEIGHT/2 ) + SCREEN_WIDTH/2;
-  float x2 = cos(angle * PI / 180) * (SCREEN_WIDTH/2 - 8) + SCREEN_WIDTH/2;
-  float y2 = sin(angle * PI / 180) * (SCREEN_HEIGHT/2 - 8) + SCREEN_WIDTH/2;
+void drawApplicationPulseScaleableFirstPage(int x, int y, int width, int height, float scale) {
+  frame.fillSmoothCircle(x, y, (width/2) * scale, rgbTo16Bit(50,50,50), rgbTo16Bit(50,50,50));
+  //tässä pitäisi piirtää sydänkuvake 
 
-  // Piirretään paksumpia viivoja
-  for (int offset = -1; offset <= 1; offset++) {
-    frame.drawLine(x1 + offset, y1, x2 + offset, y2, 0x00);
-    frame.drawLine(x1, y1 + offset, x2, y2 + offset, 0x00);
-  }
-  }
+  float heart_scale = ((float)scale*0.65) + ((float)pulseAnim/45);
+  frame.fillTriangle(x - 26 * heart_scale, y - 26 * heart_scale,      x + 26 * heart_scale, y - 26 * heart_scale,     x, y + 15 * heart_scale, TFT_BLACK);
+  frame.fillSmoothCircle(x - 11 * heart_scale, y - 31 * heart_scale, 16 * heart_scale, TFT_BLACK, TFT_BLACK);
+  frame.fillSmoothCircle(x + 11 * heart_scale, y - 31 * heart_scale, 16 * heart_scale, TFT_BLACK, TFT_BLACK);
+
+  frame.fillTriangle(x - 21 * heart_scale, y - 21 * heart_scale,      x + 21 * heart_scale, y - 21 * heart_scale,     x, y + 10 * heart_scale, TFT_RED);
+  frame.fillSmoothCircle(x - 10 * heart_scale, y - 30 * heart_scale, 14 * heart_scale, TFT_RED, TFT_RED);
+  frame.fillSmoothCircle(x + 10 * heart_scale, y - 30 * heart_scale, 14 * heart_scale, TFT_RED, TFT_RED);
+
+  frame.setTextColor(TFT_WHITE);
+  frame.drawCentreString(String(heartrate.getAvgPulse())+" bpm", x, y + 30 * scale, 4 * scale);
+}
+
+void drawApplicationHomeScaleableFirstPage(int x, int y, int width, int height, float scale) {
+  frame.fillSmoothCircle(x, y, (width/2) * scale, 0x03BF, 0x03BF);
   
+  for(int i = 0; i < 12; i++) {
+    float angle = i * 30;
+    float x1 = cos(angle * PI / 180) * ((width/2 )*scale) + x;
+    float y1 = sin(angle * PI / 180) * ((height/2 )*scale) + y;
+    float x2 = cos(angle * PI / 180) * ((width/2 - 8)*scale) + x;
+    float y2 = sin(angle * PI / 180) * ((height/2 - 8)*scale) + y;
+
+    for (int offset = -1; offset <= 1; offset++) {
+      frame.drawLine(x1 + offset, y1, x2 + offset, y2, 0x00);
+      frame.drawLine(x1, y1 + offset, x2, y2 + offset, 0x00);
+    }
+  }
   
   // Piirretään tuntiviisari
   float hourAngle = ((hour() % 12) * 30 + (minute() / 2)) * PI / 180 - PI / 2; // Tuntiviisari liikkuu myös minuuttien mukaan
-  float hourX = cos(hourAngle) * (SCREEN_WIDTH/2 - 38) + SCREEN_WIDTH/2; // Lyhyempi
-  float hourY = sin(hourAngle) * (SCREEN_HEIGHT/2 - 38) + SCREEN_WIDTH/2; // Lyhyempi
+  float hourX = cos(hourAngle) * (width/2 - 50)* scale + x; // Lyhyempi
+  float hourY = sin(hourAngle) * (height/2 - 50) * scale + y; // Lyhyempi
+
   for (int offset = -2; offset <= 2; offset++) { // Paksumpi
-    frame.drawLine(SCREEN_WIDTH/2 + offset, SCREEN_HEIGHT/2, hourX + offset, hourY, 0x0000);
-    frame.drawLine(SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + offset, hourX, hourY + offset, 0x0000);
+    frame.drawLine(x + offset, y, hourX + offset, hourY, 0x0000);
+    frame.drawLine(x, y + offset, hourX, hourY + offset, 0x0000);
   }
 
   // Piirretään minuuttiviisari
   float minuteAngle = (minute() * 6) * PI / 180 - PI / 2;
-  float minuteX = cos(minuteAngle) * (SCREEN_WIDTH/2 - 24) + SCREEN_WIDTH/2; // Lyhyempi kuin sekuntiviisari
-  float minuteY = sin(minuteAngle) * (SCREEN_HEIGHT/2 - 24) + SCREEN_WIDTH/2; // Lyhyempi kuin sekuntiviisari
+  float minuteX = cos(minuteAngle) * (width/2 - 30) * scale + x; // Lyhyempi kuin sekuntiviisari
+  float minuteY = sin(minuteAngle) * (height/2 - 30) * scale + y; // Lyhyempi kuin sekuntiviisari
+
   for (int offset = -1; offset <= 1; offset++) { // Paksumpi kuin sekuntiviisari
-    frame.drawLine(SCREEN_WIDTH/2 + offset, SCREEN_HEIGHT/2, minuteX + offset, minuteY, 0x0000);
-    frame.drawLine(SCREEN_WIDTH/2, SCREEN_HEIGHT/2 + offset, minuteX, minuteY + offset, 0x0000);
+    frame.drawLine(x + offset, y, minuteX + offset, minuteY, 0x0000);
+    frame.drawLine(x, y + offset, minuteX, minuteY + offset, 0x0000);
   }
 
   // Piirretään sekuntiviisari
   float secondAngle = (second() * 6) * PI / 180 - PI / 2;
-  float secondX = cos(secondAngle) * (SCREEN_WIDTH/2 - 10) + SCREEN_WIDTH/2;
-  float secondY = sin(secondAngle) * (SCREEN_HEIGHT/2 - 10) + SCREEN_WIDTH/2;
-  frame.drawLine(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, secondX, secondY, TFT_RED);
+  float secondX = cos(secondAngle) * (width/2 - 40) * scale + x;
+  float secondY = sin(secondAngle) * (height/2 - 40) * scale + y;
+  frame.drawLine(x, y, secondX, secondY, TFT_RED);
 
   // Piirretään kellon keskusta
-  frame.fillSmoothCircle((SCREEN_WIDTH/2), (SCREEN_HEIGHT/2), 5, 0x0210, 0x0210);
+  frame.fillSmoothCircle(x, y, 5 * scale, 0x0210, 0x0210);
+}
+
+void drawApplicationHome() {
+  drawApplicationHomeScaleableFirstPage( SCREEN_WIDTH/2, SCREEN_HEIGHT/2, SCREEN_WIDTH, SCREEN_HEIGHT, 1);
+}
+
+void drawApplicationPulse() {
+  drawApplicationPulseScaleableFirstPage( SCREEN_WIDTH/2, SCREEN_HEIGHT/2, SCREEN_WIDTH, SCREEN_HEIGHT, 1);
 }
 
 void drawApplicationMenu(int x_offset, int y_offset, int app_size) {
@@ -172,50 +229,20 @@ void drawApplicationMenu(int x_offset, int y_offset, int app_size) {
         if(x_pos % 2 == 0){bonus_offset = app_size/2;}
         if( !(selectedApplication != -1 && selectedApplication == appId))
         {
-           frame.fillSmoothCircle(x, y + bonus_offset, (app_size/2) , menuColors[appId], menuColors[appId]);
-           if(appId == 2)
+           if(appId == 4)
            {
-
-            for(int i = 0; i < 12; i++) {
-            float angle = i * 30;
-            float x1 = cos(angle * PI / 180) * (app_size/2 ) + x;
-            float y1 = sin(angle * PI / 180) * (app_size/2 ) +  y + bonus_offset;
-            float x2 = cos(angle * PI / 180) * (app_size/2 - 4) + x;
-            float y2 = sin(angle * PI / 180) * (app_size/2 - 4) +  y + bonus_offset;
-
-            // Piirretään paksumpia viivoja
-            for (int offset = -1; offset <= 1; offset++) {
-              frame.drawLine(x1 + offset, y1, x2 + offset, y2, 0x00);
-              frame.drawLine(x1, y1 + offset, x2, y2 + offset, 0x00);
-            }
-            }
-
-      // Piirretään tuntiviisari
-  float hourAngle = ((hour() % 12) * 30 + (minute() / 2)) * PI / 180 - PI / 2; // Tuntiviisari liikkuu myös minuuttien mukaan
-  float hourX = cos(hourAngle) * (app_size/2 - 17) +x; // Lyhyempi
-  float hourY = sin(hourAngle) * (app_size/2 - 17)  + y + bonus_offset; // Lyhyempi
-  for (int offset = -2; offset <= 2; offset++) { // Paksumpi
-    frame.drawLine(x + offset, y + bonus_offset, hourX + offset, hourY, 0x0000);
-    frame.drawLine(x, y + bonus_offset + offset, hourX, hourY + offset, 0x0000);
-  }
-
-
-            // Piirretään minuuttiviisari
-  float minuteAngle = (minute() * 6) * PI / 180 - PI / 2;
-  float minuteX = cos(minuteAngle) * (app_size/2 - 13) + x; // Lyhyempi kuin sekuntiviisari
-  float minuteY = sin(minuteAngle) * (app_size/2 - 13) + y + bonus_offset; // Lyhyempi kuin sekuntiviisari
-  for (int offset = -1; offset <= 1; offset++) { // Paksumpi kuin sekuntiviisari
-    frame.drawLine(x + offset, y + bonus_offset, minuteX + offset, minuteY, 0x0000);
-    frame.drawLine(x, y + bonus_offset + offset, minuteX, minuteY + offset, 0x0000);
-  }
-
-             // Piirretään sekuntiviisari
-            float secondAngle = (second() * 6) * PI / 180 - PI / 2;
-            float secondX = cos(secondAngle) * (app_size/2 - 10) + x;
-            float secondY = sin(secondAngle) * (app_size/2 - 10) + y + bonus_offset;
-            frame.drawLine(x, y + bonus_offset, secondX, secondY, TFT_RED);
-
-            frame.fillSmoothCircle(x, y + bonus_offset, 1, 0x0210, 0x0210);
+              // tähän piirretään skaalaamaton sovellus ikoni
+              drawApplicationHomeScaleableFirstPage(x, y + bonus_offset, SCREEN_WIDTH, SCREEN_HEIGHT, 0.3);
+           }
+           else if(appId == 5)
+           {
+              // tähän piirretään skaalaamaton sovellus ikoni
+              drawApplicationPulseScaleableFirstPage(x, y + bonus_offset, SCREEN_WIDTH, SCREEN_HEIGHT, 0.3);
+           }
+           else
+           {
+              //joku muu kuin kellosovellus
+              frame.fillSmoothCircle(x, y + bonus_offset, (app_size/2) ,0x0210,0x0210);
            }
         }
         else
@@ -227,51 +254,19 @@ void drawApplicationMenu(int x_offset, int y_offset, int app_size) {
     }
   }
   //selected background
-  frame.fillSmoothCircle(selectedX , selectedY , (app_size/2 + 5)*(1+((float)scaleAnim/5)) , 0xFFFFFF, 0xFFFFFF);
-  frame.fillSmoothCircle(selectedX, selectedY, (app_size/2)*(1+((float)scaleAnim/5)) , menuColors[selectedApp], menuColors[selectedApp]);
-  if(selectedApplication == 2)
+  float scaleval = (float)(scaleAnim)/15; if(scaleval<0.3){scaleval=0.3;}
+  frame.fillSmoothCircle(selectedX , selectedY , (SCREEN_WIDTH/2 + 10)*scaleval , 0xFFFFFF, 0xFFFFFF);
+  frame.fillSmoothCircle(selectedX, selectedY, (SCREEN_WIDTH/2)*scaleval , 0x0210,0x0210); // 0x03BF 0x0210
+  
+  if(selectedApplication == 4)
   {
-    for(int i = 0; i < 12; i++) {
-    float angle = i * 30;
-    float x1 = cos(angle * PI / 180) * (app_size/2)*(1+((float)scaleAnim/5)) + selectedX;
-    float y1 = sin(angle * PI / 180) * (app_size/2)*(1+((float)scaleAnim/5)) + selectedY;
-    float x2 = cos(angle * PI / 180) * ((app_size/2)*(1+((float)scaleAnim/5))-4) + selectedX;
-    float y2 = sin(angle * PI / 180) * ((app_size/2)*(1+((float)scaleAnim/5))-4) +  selectedY;
-
-    // Piirretään paksumpia viivoja
-    for (int offset = -1; offset <= 1; offset++) {
-    frame.drawLine(x1 + offset, y1, x2 + offset, y2, 0x00);
-    frame.drawLine(x1, y1 + offset, x2, y2 + offset, 0x00);
-    }
-    }
-
-    // Piirretään tuntiviisari
-  float hourAngle = ((hour() % 12) * 30 + (minute() / 2)) * PI / 180 - PI / 2; // Tuntiviisari liikkuu myös minuuttien mukaan
-  float hourX = cos(hourAngle) * ((app_size/2 - 11)*(1+((float)scaleAnim/5))) +selectedX; // Lyhyempi
-  float hourY = sin(hourAngle) * ((app_size/2 - 11)*(1+((float)scaleAnim/5)))  + selectedY; // Lyhyempi
-  for (int offset = -2; offset <= 2; offset++) { // Paksumpi
-    frame.drawLine(selectedX + offset,selectedY, hourX + offset, hourY, 0x0000);
-    frame.drawLine(selectedX, selectedY + offset, hourX, hourY + offset, 0x0000);
+    drawApplicationHomeScaleableFirstPage(selectedX, selectedY, SCREEN_WIDTH, SCREEN_HEIGHT, scaleval);
   }
-
-            // Piirretään minuuttiviisari
-  float minuteAngle = (minute() * 6) * PI / 180 - PI / 2;
-  float minuteX = cos(minuteAngle) * ((app_size/2 - 7)*(1+((float)scaleAnim/5)) ) + selectedX; // Lyhyempi kuin sekuntiviisari
-  float minuteY = sin(minuteAngle) * ((app_size/2 - 7)*(1+((float)scaleAnim/5)) ) + selectedY; // Lyhyempi kuin sekuntiviisari
-  for (int offset = -1; offset <= 1; offset++) { // Paksumpi kuin sekuntiviisari
-    frame.drawLine(selectedX + offset, selectedY, minuteX + offset, minuteY, 0x0000);
-    frame.drawLine(selectedX, selectedY + offset, minuteX, minuteY + offset, 0x0000);
+  if(selectedApplication == 5)
+  {
+    drawApplicationPulseScaleableFirstPage(selectedX, selectedY, SCREEN_WIDTH, SCREEN_HEIGHT, scaleval);
   }
-
-    // Piirretään sekuntiviisari
-            float secondAngle = (second() * 6) * PI / 180 - PI / 2;
-            float secondX = cos(secondAngle) * ((app_size/2-3)*(1+((float)scaleAnim/5))) + selectedX;
-            float secondY = sin(secondAngle) * ((app_size/2-3)*(1+((float)scaleAnim/5))) + selectedY;
-            frame.drawLine(selectedX, selectedY, secondX, secondY, TFT_RED);
-
-    frame.fillSmoothCircle(selectedX, selectedY, 1.2*(1+((float)scaleAnim/5)), 0x0210, 0x0210);
-  }
-
+ 
   if(isDragging)
   {
   frame.fillSmoothCircle(120, 120, app_size/6 , 0xFFFFFF, 0xFFFFFF);
@@ -279,7 +274,7 @@ void drawApplicationMenu(int x_offset, int y_offset, int app_size) {
 }
 
 void handleApplicationMenuTouch(int x_offset, int y_offset, int app_size) {
-  if (touch.userTouch() && scaleAnim == 1) {
+  if (touch.userTouch() && scaleAnim < 1.5) {
     last_touch = millis();
     if (!isDragging) {
       touchStartX = touch.x;
@@ -301,7 +296,7 @@ void handleApplicationMenuTouch(int x_offset, int y_offset, int app_size) {
     if(isDragging)
     {
 
-      if(last_release + 1000 > millis() && menu_x == selectPosX && menu_y == selectPosY && selectedApplication == 2)
+      if(last_release + 1000 > millis() && menu_x == selectPosX && menu_y == selectPosY && (selectedApplication == 4 || selectedApplication == 5))
       {
         Serial.println("start app");
         openApp = true;
@@ -314,10 +309,7 @@ void handleApplicationMenuTouch(int x_offset, int y_offset, int app_size) {
   }
 
   if (!isDragging && last_touch + 100 < millis()) { //SmoothAjo6000
-    SmoothAjo6000(near_app_x,near_app_y);//) {
-     // selectedApplication = next_app;
-      //Ready
-    //}
+    SmoothAjo6000(near_app_x,near_app_y);
 }
 }
 
@@ -333,9 +325,6 @@ void getNearestApplication(int x_offset, int y_offset, int app_size) {
        int bonus_offset = 0;
         if(x_pos % 2 == 0){bonus_offset = app_size/2;}
 
-      //int app_x = x_pos + (app_size/2), app_y = y_pos + (app_size/2) + bonus_offset;
-
-      
       int app_x = x_pos * (app_size + x_offset);// + (app_size/2);
       int app_y = y_pos * (app_size + y_offset)+bonus_offset; // (app_size/2) 
       int dist = sqrt(pow(current_xpos - app_x, 2) + pow(current_ypos - app_y, 2));
