@@ -19,8 +19,8 @@ void TOUCH::loop() {
   if(obj.available()) {
     touchData.available = true;
     touchData.gestureID = obj.data.gestureID;
-    x = obj.data.x;
     y = obj.data.y;
+    x = obj.data.x;
   }
   else 
   {
