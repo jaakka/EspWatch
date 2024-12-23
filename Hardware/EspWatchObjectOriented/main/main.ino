@@ -7,6 +7,14 @@
 #define SCREEN_HEIGHT 240
 #define SCREEN_CALCULATED 57600 // 240 * 240
 
+#define LCD_BACKLIGHT 32
+#define VOLTAGE 35
+#define BTN_DOWN 4
+#define BTN_UP 23
+
+#define SCREEN_SLEEP_BRIGHTNESS 10 //%
+int SCREEN_BRIGHTNESS=100; //%
+
 TFT_eSPI lcd = TFT_eSPI();
 TFT_eSprite frame = TFT_eSprite(&lcd);
 TOUCH touch;
@@ -34,6 +42,11 @@ int touchStartY = 0;
 bool isDragging = false;
 unsigned long last_touch = 0;
 unsigned long last_release = 0;
+bool canPulse = false;
+
+unsigned long sleeptime = 0;
+int waitsleep = 5000;
+bool sleepmode = false;
 
 void setup() {
   Serial.begin(115200);
@@ -41,28 +54,65 @@ void setup() {
   lcd.begin();
   int trytimes = 100;
   while(true){
-    if(heartrate.begin()){break;}else{if(trytimes>0){trytimes--;}else{break;}}
+    if(heartrate.begin()){canPulse=true; break;}else{if(trytimes>0){trytimes--;}else{break;}}
   }
   lcd.setRotation(0);
   lcd.fillScreen(0);
   frame.createSprite(SCREEN_WIDTH, SCREEN_HEIGHT, TFT_TRANSPARENT);
   last_release = millis(); 
+  sleeptime = millis();
   setTime(0, 0, 00, 1, 12, 2024);
   heartrate.enableSensor();
+  pinMode(LCD_BACKLIGHT,OUTPUT);
+  analogWrite(LCD_BACKLIGHT,(int)(((float)255/100)*SCREEN_BRIGHTNESS));
 }
 
 void loop() {
   heartrate.loop();
 
-  if(heartrate.sensorEnabled && heartrate.pulseDetected() && (application == PULSE || application == MENU))
+  if(!(sleeptime + waitsleep < millis()) && sleepmode) {
+    sleepmode = false;
+    analogWrite(LCD_BACKLIGHT,(int)(((float)255/100)*SCREEN_BRIGHTNESS));
+  }
+
+  if(sleeptime + waitsleep < millis() && !sleepmode)
   {
-    if(pulseAnim > 0)
+    if(application != MENU && application != HOME) {
+      application = MENU;
+      openApp = false;
+    }
+
+    if(application == HOME) {
+      sleepmode = true;
+      analogWrite(LCD_BACKLIGHT,(int)(((float)255/100)*SCREEN_SLEEP_BRIGHTNESS));
+    }
+
+    if(application == MENU && scaleAnim == 1) {
+    
+      if(menu_x != 55 || menu_y != 50) {
+        near_app_x = 55;
+        near_app_y = 50;
+        selectedApplication = 4;
+      }
+
+      if(menu_x == 55 && menu_y == 50) {
+        sleepmode = true;
+        openApp = true;
+        analogWrite(LCD_BACKLIGHT,(int)(((float)255/100)*SCREEN_SLEEP_BRIGHTNESS));
+      }
+    }
+  }
+
+
+  
+
+  if(heartrate.sensorEnabled && (application == PULSE || application == MENU) && !sleepmode)
+  {
+    if(heartrate.pulseDetected()){pulseAnim=15;}
+
+    if(pulseAnim > 7)
     {
       pulseAnim--;
-    }
-    else
-    {
-      pulseAnim=15;
     }
   }
 
@@ -78,6 +128,7 @@ void loop() {
         }
         else if(selectedApplication == 5)
         {
+          sleeptime = millis(); //Cant sleep in pulse app
           application = PULSE;
         }
       }
@@ -92,6 +143,11 @@ void loop() {
   }
 
   touch.loop();
+
+  if(touch.userTouch()) {
+    sleeptime = millis();
+  }
+
   if(application == HOME)
   {
     //handleHomeApplication();
@@ -126,6 +182,7 @@ uint16_t rgbTo16Bit(uint8_t red, uint8_t green, uint8_t blue) {
   return (red << 11) | (green << 5) | blue;
 }
 void handleApplicationPulse() {
+
   if(touch.userSwipeRight()) {
     application = MENU;
     openApp = false;
@@ -136,6 +193,7 @@ void handleApplicationPulse() {
 }
 
 void handleApplicationHomeTouch() {
+
   if(touch.userSwipeRight()) {
     application = MENU;
     openApp = false;
@@ -157,10 +215,69 @@ void drawApplicationPulseScaleableFirstPage(int x, int y, int width, int height,
   frame.fillSmoothCircle(x + 10 * heart_scale, y - 30 * heart_scale, 14 * heart_scale, TFT_RED, TFT_RED);
 
   frame.setTextColor(TFT_WHITE);
-  frame.drawCentreString(String(heartrate.getAvgPulse())+" bpm", x, y + 30 * scale, 4 * scale);
+
+  float textScale = 4 * scale;
+  if(textScale>=3)
+  {
+    if(textScale>3.5){textScale=4;}else{textScale=2;}
+  }
+  Serial.println("textScale "+String(textScale));
+
+  if(canPulse)
+  {
+    frame.drawCentreString(String(heartrate.getAvgPulse())+" bpm", x, y + 30 * scale, textScale);
+  }
+  else
+  {
+    frame.drawCentreString("Failed", x, y + 30 * scale, textScale);
+  }
 }
 
 void drawApplicationHomeScaleableFirstPage(int x, int y, int width, int height, float scale) {
+  if(sleepmode)
+  {
+    frame.fillSmoothCircle(x, y, (width/2) * scale, TFT_BLACK, TFT_BLACK);
+
+  for(int i = 0; i < 12; i++) {
+    float angle = i * 30;
+    float x1 = cos(angle * PI / 180) * ((width/2 )*scale) + x;
+    float y1 = sin(angle * PI / 180) * ((height/2 )*scale) + y;
+    float x2 = cos(angle * PI / 180) * ((width/2 - 8)*scale) + x;
+    float y2 = sin(angle * PI / 180) * ((height/2 - 8)*scale) + y;
+
+    for (int offset = -1; offset <= 1; offset++) {
+      frame.drawLine(x1 + offset, y1, x2 + offset, y2, TFT_WHITE);
+      frame.drawLine(x1, y1 + offset, x2, y2 + offset, TFT_WHITE);
+    }
+  }
+
+     // Piirretään tuntiviisari
+  float hourAngle = ((hour() % 12) * 30 + (minute() / 2)) * PI / 180 - PI / 2; // Tuntiviisari liikkuu myös minuuttien mukaan
+  float hourX = cos(hourAngle) * (width/2 - 50)* scale + x; // Lyhyempi
+  float hourY = sin(hourAngle) * (height/2 - 50) * scale + y; // Lyhyempi
+
+  for (int offset = -2; offset <= 2; offset++) { // Paksumpi
+    frame.drawLine(x + offset, y, hourX + offset, hourY, TFT_WHITE);
+    frame.drawLine(x, y + offset, hourX, hourY + offset, TFT_WHITE);
+  }
+
+  // Piirretään minuuttiviisari
+  float minuteAngle = (minute() * 6) * PI / 180 - PI / 2;
+  float minuteX = cos(minuteAngle) * (width/2 - 30) * scale + x; // Lyhyempi kuin sekuntiviisari
+  float minuteY = sin(minuteAngle) * (height/2 - 30) * scale + y; // Lyhyempi kuin sekuntiviisari
+
+  for (int offset = -1; offset <= 1; offset++) { // Paksumpi kuin sekuntiviisari
+    frame.drawLine(x + offset, y, minuteX + offset, minuteY, TFT_WHITE);
+    frame.drawLine(x, y + offset, minuteX, minuteY + offset, TFT_WHITE);
+  }
+
+  // Piirretään kellon keskusta
+  frame.fillSmoothCircle(x, y, 5 * scale, TFT_WHITE, TFT_WHITE);
+
+  }
+
+  if(!sleepmode)
+  {
   frame.fillSmoothCircle(x, y, (width/2) * scale, 0x03BF, 0x03BF);
   
   for(int i = 0; i < 12; i++) {
@@ -204,6 +321,7 @@ void drawApplicationHomeScaleableFirstPage(int x, int y, int width, int height, 
 
   // Piirretään kellon keskusta
   frame.fillSmoothCircle(x, y, 5 * scale, 0x0210, 0x0210);
+  }
 }
 
 void drawApplicationHome() {
@@ -274,6 +392,7 @@ void drawApplicationMenu(int x_offset, int y_offset, int app_size) {
 }
 
 void handleApplicationMenuTouch(int x_offset, int y_offset, int app_size) {
+
   if (touch.userTouch() && scaleAnim < 1.5) {
     last_touch = millis();
     if (!isDragging) {
