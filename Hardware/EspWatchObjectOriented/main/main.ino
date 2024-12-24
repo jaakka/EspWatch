@@ -47,7 +47,7 @@ bool canPulse = false;
 unsigned long last_slide = 0;
 
 unsigned long sleeptime = 0;
-int waitsleep = 10000;
+int waitsleep = 600000;
 bool sleepmode = false;
 
 void setup() {
@@ -107,7 +107,7 @@ void loop() {
 
 
   
-
+  // FIXME: Pulseanimation doesn't work, is the problem here or in heartrate.cpp in pulseDetected? (Does the pulseDetected() stay true constantly like it should or does it turn false briefly?)
   if(heartrate.sensorEnabled && (application == PULSE || application == MENU) && !sleepmode)
   {
     if(heartrate.pulseDetected()){pulseAnim=15;}
@@ -278,7 +278,7 @@ void drawApplicationPulseScaleableFirstPage(int x, int y, int width, int height,
   {
     if(textScale>3.5){textScale=4;}else{textScale=2;}
   }
-  Serial.println("textScale "+String(textScale));
+  //Serial.println("textScale "+String(textScale));
 
   if(canPulse)
   {
