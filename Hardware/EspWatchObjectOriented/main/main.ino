@@ -9,8 +9,6 @@
 
 #define LCD_BACKLIGHT 32
 #define VOLTAGE 35
-#define BTN_DOWN 18
-#define BTN_UP 23
 
 #define SCREEN_SLEEP_BRIGHTNESS 10 //%
 int SCREEN_BRIGHTNESS=100; //%
@@ -48,30 +46,6 @@ unsigned long sleeptime = 0;
 int waitsleep = 5000;
 bool sleepmode = false;
 
-bool ButtonDown()
-{
-   int sensorVal = digitalRead(BTN_DOWN);
-   if(sensorVal == 0) {
-    sleeptime = millis();
-    return true;
-   }
-   else {
-    return false;
-   }
-}
-
-bool ButtonUp()
-{
-   int sensorVal = digitalRead(BTN_UP);
-   if(sensorVal == 0) {
-    sleeptime = millis();
-    return true;
-   }else {
-    return false;
-   }
-}
-
-
 void setup() {
   Serial.begin(115200);
   touch.init();
@@ -80,7 +54,7 @@ void setup() {
   while(true){
     if(heartrate.begin()){canPulse=true; break;}else{if(trytimes>0){trytimes--;}else{break;}}
   }
-  lcd.setRotation(0);
+  lcd.setRotation(1);
   lcd.fillScreen(0);
   frame.createSprite(SCREEN_WIDTH, SCREEN_HEIGHT, TFT_TRANSPARENT);
   last_release = millis(); 
@@ -88,9 +62,6 @@ void setup() {
   setTime(0, 0, 00, 1, 12, 2024);
   heartrate.enableSensor();
   pinMode(LCD_BACKLIGHT,OUTPUT);
-  pinMode(BTN_DOWN, INPUT_PULLUP);
-  pinMode(BTN_UP, INPUT_PULLUP);
-
   analogWrite(LCD_BACKLIGHT,(int)(((float)255/100)*SCREEN_BRIGHTNESS));
 }
 
@@ -209,19 +180,15 @@ uint16_t rgbTo16Bit(uint8_t red, uint8_t green, uint8_t blue) {
   return (red << 11) | (green << 5) | blue;
 }
 void handleApplicationPulse() {
-
-  if(ButtonDown()) { //touch.userSwipeRight()) {
+  if(touch.userSwipeUp()) { //touch.userSwipeRight()) {
     application = MENU;
     openApp = false;
     Serial.println("close app");
   }
-
-
 }
 
 void handleApplicationHomeTouch() {
-
-  if(ButtonDown()) { // touch.userSwipeRight() 
+  if(touch.userSwipeUp()) { // touch.userSwipeRight() 
     application = MENU;
     openApp = false;
     Serial.println("close app");
@@ -442,20 +409,17 @@ void handleApplicationMenuTouch(int x_offset, int y_offset, int app_size) {
     if(isDragging)
     {
 
-      //if(last_release + 1000 > millis() && menu_x == selectPosX && menu_y == selectPosY && (selectedApplication == 4 || selectedApplication == 5))
-      
+      if(last_release + 1000 > millis() && abs(menu_x-selectPosX)<5 && abs(menu_y-selectPosY)<5 && (selectedApplication == 4 || selectedApplication == 5))
+      {
+        Serial.println("start app");
+        openApp = true;
+      }
       last_release = millis();
       selectPosX = menu_x, selectPosY = menu_y;
       getNearestApplication(x_offset, y_offset, app_size);
     }
     isDragging = false;
   }
-
-  if(ButtonUp() && (selectedApplication == 4 || selectedApplication == 5)) 
-      {
-        Serial.println("start app");
-        openApp = true;
-      }
 
   if (!isDragging && last_touch + 100 < millis()) { //SmoothAjo6000
     SmoothAjo6000(near_app_x,near_app_y);

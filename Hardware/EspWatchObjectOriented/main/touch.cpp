@@ -19,8 +19,8 @@ void TOUCH::loop() {
   if(obj.available()) {
     touchData.available = true;
     touchData.gestureID = obj.data.gestureID;
-    y = obj.data.y;
-    x = obj.data.x;
+    x = obj.data.y;
+    y = 240-obj.data.x;
   }
   else 
   {
@@ -29,28 +29,28 @@ void TOUCH::loop() {
 }
 
 bool TOUCH::userSwipeRight() {
-  if(touchData.available && touchData.gestureID == SWIPE_RIGHT) {
+  if(touchData.available && touchData.gestureID == SWIPE_UP) { //SWIPE_RIGHT
     return true;
   }
   return false;
 }
 
 bool TOUCH::userSwipeLeft() {
-  if(touchData.available && touchData.gestureID == SWIPE_LEFT) {
+  if(touchData.available && touchData.gestureID == SWIPE_DOWN) {
     return true;
   }
   return false;
 }
 
 bool TOUCH::userSwipeUp() {
-  if(touchData.available && touchData.gestureID == SWIPE_UP) {
+  if(touchData.available && touchData.gestureID == SWIPE_RIGHT) {
     return true;
   }
   return false;
 }
 
 bool TOUCH::userSwipeDown() {
-  if(touchData.available && touchData.gestureID == SWIPE_DOWN) {
+  if(touchData.available && touchData.gestureID == SWIPE_LEFT) {
     return true;
   }
   return false;
