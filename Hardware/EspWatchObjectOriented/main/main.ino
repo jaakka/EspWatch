@@ -32,6 +32,9 @@ int scaleAnim = 15;
 int selectPosX = -1, selectPosY = -1;
 int menu_x = 55, menu_y = 50, next_app = -1;
 App application = HOME;
+int applicationPage = 1;
+int applicationMinPage = 1;
+int applicationMaxPage = 1;
 int selectedApplication = 4;
 int near_app_x = 55, near_app_y = 50; 
 bool userWake = false;
@@ -41,9 +44,10 @@ bool isDragging = false;
 unsigned long last_touch = 0;
 unsigned long last_release = 0;
 bool canPulse = false;
+unsigned long last_slide = 0;
 
 unsigned long sleeptime = 0;
-int waitsleep = 5000;
+int waitsleep = 10000;
 bool sleepmode = false;
 
 void setup() {
@@ -122,11 +126,17 @@ void loop() {
       {
         if(selectedApplication == 4)
         {
+          applicationMinPage = 1;
+          applicationMaxPage = 1;
+          applicationPage = 1;
           application = HOME;
         }
         else if(selectedApplication == 5)
         {
           sleeptime = millis(); //Cant sleep in pulse app
+          applicationMinPage = 0;
+          applicationMaxPage = 2;
+          applicationPage = 1;
           application = PULSE;
         }
       }
@@ -144,6 +154,27 @@ void loop() {
 
   if(touch.userTouch()) {
     sleeptime = millis();
+  }
+
+  if(application != MENU && (last_slide+500) < millis()) {
+    if(touch.userSwipeRight()) {
+      Serial.println("sovellus oikealle");
+      if(applicationPage > applicationMinPage) {
+        Serial.println("sovellus oikealle ok");
+        applicationPage--;
+      }
+      else{Serial.println("sovellus oikealle fail");}
+      last_slide = millis();
+    }
+    if(touch.userSwipeLeft()) {
+      Serial.println("sovellus vasemmalle");
+      if(applicationPage < applicationMaxPage) {
+        applicationPage++;
+        Serial.println("sovellus vasemmalle ok");
+      }
+      else{Serial.println("sovellus vasemmalle fail");}
+      last_slide = millis();
+    }
   }
 
   if(application == HOME)
@@ -193,6 +224,38 @@ void handleApplicationHomeTouch() {
     openApp = false;
     Serial.println("close app");
   }
+}
+
+void drawApplicationPulse0page() {
+  frame.fillSmoothCircle(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, SCREEN_WIDTH/2, rgbTo16Bit(50,50,50), rgbTo16Bit(50,50,50));
+  frame.setTextColor(TFT_WHITE);
+  frame.drawCentreString("Daily", SCREEN_WIDTH/2, 50 , 4);
+
+  //left line
+  frame.drawWideLine((SCREEN_WIDTH/2) - 80, (SCREEN_HEIGHT/2) - 20, (SCREEN_WIDTH/2) - 80, (SCREEN_HEIGHT/2) + 50, 2, TFT_WHITE);
+
+  //bottom line
+  frame.drawWideLine((SCREEN_WIDTH/2) - 80, (SCREEN_HEIGHT/2) + 50, (SCREEN_WIDTH/2) + 80, (SCREEN_HEIGHT/2) + 50, 2, TFT_WHITE);
+}
+
+void drawApplicationPulse2page() {
+  frame.fillSmoothCircle(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, SCREEN_WIDTH/2, rgbTo16Bit(50,50,50), rgbTo16Bit(50,50,50));
+  frame.setTextColor(TFT_WHITE);
+  frame.drawCentreString("Weekly", SCREEN_WIDTH/2, 50 , 4);
+
+  for(int i=0; i<7; i++) {
+    int x_offset = (SCREEN_WIDTH/2) - 80;
+    int y_offset = (SCREEN_HEIGHT/2) + 50;
+    //tässä piirretään 7 neliötä jotka näyttävä viikonpäivien sykemäärät
+    int barsize = 10 + i*10;
+    frame.fillRect(3+x_offset + (i * 23), y_offset-barsize, 15, barsize, TFT_RED);
+  }
+
+  //bottom line
+  frame.drawWideLine((SCREEN_WIDTH/2) - 80, (SCREEN_HEIGHT/2) + 50, (SCREEN_WIDTH/2) + 80, (SCREEN_HEIGHT/2) + 50, 2, TFT_WHITE);
+
+  frame.drawCentreString("Min 20bpm", SCREEN_WIDTH/2, (SCREEN_HEIGHT/2) + 60 , 2);
+  frame.drawCentreString("Max 80bpm", SCREEN_WIDTH/2, (SCREEN_HEIGHT/2) + 75 , 2);
 }
 
 void drawApplicationPulseScaleableFirstPage(int x, int y, int width, int height, float scale) {
@@ -323,7 +386,15 @@ void drawApplicationHome() {
 }
 
 void drawApplicationPulse() {
-  drawApplicationPulseScaleableFirstPage( SCREEN_WIDTH/2, SCREEN_HEIGHT/2, SCREEN_WIDTH, SCREEN_HEIGHT, 1);
+  if(applicationPage == 0) {
+    drawApplicationPulse0page();
+  }
+  if(applicationPage == 1) {
+    drawApplicationPulseScaleableFirstPage( SCREEN_WIDTH/2, SCREEN_HEIGHT/2, SCREEN_WIDTH, SCREEN_HEIGHT, 1);
+  }
+  if(applicationPage == 2) {
+    drawApplicationPulse2page();
+  }
 }
 
 void drawApplicationMenu(int x_offset, int y_offset, int app_size) {
