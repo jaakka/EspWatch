@@ -33,7 +33,7 @@ int selectPosX = -1, selectPosY = -1;
 int menu_x = 55, menu_y = 50, next_app = -1;
 App application = HOME;
 int applicationPage = 1;
-int applicationMinPage = 1;
+int applicationMinPage = 0;
 int applicationMaxPage = 1;
 int selectedApplication = 4;
 int near_app_x = 55, near_app_y = 50; 
@@ -45,9 +45,11 @@ unsigned long last_touch = 0;
 unsigned long last_release = 0;
 bool canPulse = false;
 unsigned long last_slide = 0;
+float voltage = 0;
+int homescreen_theme = 1;
 
 unsigned long sleeptime = 0;
-int waitsleep = 600000;
+int waitsleep = 6000;
 bool sleepmode = false;
 
 void setup() {
@@ -66,10 +68,12 @@ void setup() {
   setTime(0, 0, 00, 1, 12, 2024);
   heartrate.enableSensor();
   pinMode(LCD_BACKLIGHT,OUTPUT);
+  pinMode(VOLTAGE,INPUT);
   analogWrite(LCD_BACKLIGHT,(int)(((float)255/100)*SCREEN_BRIGHTNESS));
 }
 
 void loop() {
+  voltage = analogRead(VOLTAGE) * (5.0 / 4095.0); // 12bit esp32 ?
   heartrate.loop();
 
   if(!(sleeptime + waitsleep < millis()) && sleepmode) {
@@ -126,9 +130,9 @@ void loop() {
       {
         if(selectedApplication == 4)
         {
-          applicationMinPage = 1;
+          applicationMinPage = 0;
           applicationMaxPage = 1;
-          applicationPage = 1;
+          applicationPage = homescreen_theme;
           application = HOME;
         }
         else if(selectedApplication == 5)
@@ -162,6 +166,9 @@ void loop() {
       if(applicationPage > applicationMinPage) {
         Serial.println("sovellus oikealle ok");
         applicationPage--;
+        if(application == HOME) {
+          homescreen_theme = applicationPage;
+        }
       }
       else{Serial.println("sovellus oikealle fail");}
       last_slide = millis();
@@ -171,6 +178,9 @@ void loop() {
       if(applicationPage < applicationMaxPage) {
         applicationPage++;
         Serial.println("sovellus vasemmalle ok");
+        if(application == HOME) {
+          homescreen_theme = applicationPage;
+        }
       }
       else{Serial.println("sovellus vasemmalle fail");}
       last_slide = millis();
@@ -229,19 +239,45 @@ void handleApplicationHomeTouch() {
 void drawApplicationPulse0page() {
   frame.fillSmoothCircle(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, SCREEN_WIDTH/2, rgbTo16Bit(50,50,50), rgbTo16Bit(50,50,50));
   frame.setTextColor(TFT_WHITE);
-  frame.drawCentreString("Daily", SCREEN_WIDTH/2, 50 , 4);
 
-  //left line
+  frame.setTextSize(3);
+
+  frame.drawCentreString("Daily", SCREEN_WIDTH/2, 50 , 1);
+
+  int x_offset = (SCREEN_WIDTH/2) - 80;
+  int y_offset = (SCREEN_HEIGHT/2) + 50;
+  int margin = 160/24;
+  int lastsize = 20;
+  int lastx =0;
+  for(int i=0; i<24; i++) {
+    int newsize = random(0,80);
+    frame.drawWideLine(x_offset + margin*i, y_offset - lastsize, x_offset + margin + margin*i, y_offset - newsize, 2, TFT_RED);
+    lastx = x_offset + margin + margin*i;
+    lastsize = newsize;
+  }
+
+  frame.drawCircle(lastx + 3,  (y_offset - 3) - lastsize, 3, TFT_WHITE);
+
+  frame.setTextSize(1);
+
+  frame.drawCentreString("Min 20bpm", SCREEN_WIDTH/2, (SCREEN_HEIGHT/2) + 60 , 2);
+  frame.drawCentreString("Max 80bpm", SCREEN_WIDTH/2, (SCREEN_HEIGHT/2) + 75 , 2);
+
+    //left line
   frame.drawWideLine((SCREEN_WIDTH/2) - 80, (SCREEN_HEIGHT/2) - 20, (SCREEN_WIDTH/2) - 80, (SCREEN_HEIGHT/2) + 50, 2, TFT_WHITE);
 
   //bottom line
   frame.drawWideLine((SCREEN_WIDTH/2) - 80, (SCREEN_HEIGHT/2) + 50, (SCREEN_WIDTH/2) + 80, (SCREEN_HEIGHT/2) + 50, 2, TFT_WHITE);
+
 }
 
 void drawApplicationPulse2page() {
   frame.fillSmoothCircle(SCREEN_WIDTH/2, SCREEN_HEIGHT/2, SCREEN_WIDTH/2, rgbTo16Bit(50,50,50), rgbTo16Bit(50,50,50));
   frame.setTextColor(TFT_WHITE);
-  frame.drawCentreString("Weekly", SCREEN_WIDTH/2, 50 , 4);
+
+  frame.setTextSize(3);
+
+  frame.drawCentreString("Weekly", SCREEN_WIDTH/2, 50 , 1);
 
   for(int i=0; i<7; i++) {
     int x_offset = (SCREEN_WIDTH/2) - 80;
@@ -253,6 +289,8 @@ void drawApplicationPulse2page() {
 
   //bottom line
   frame.drawWideLine((SCREEN_WIDTH/2) - 80, (SCREEN_HEIGHT/2) + 50, (SCREEN_WIDTH/2) + 80, (SCREEN_HEIGHT/2) + 50, 2, TFT_WHITE);
+
+  frame.setTextSize(1);
 
   frame.drawCentreString("Min 20bpm", SCREEN_WIDTH/2, (SCREEN_HEIGHT/2) + 60 , 2);
   frame.drawCentreString("Max 80bpm", SCREEN_WIDTH/2, (SCREEN_HEIGHT/2) + 75 , 2);
@@ -272,22 +310,55 @@ void drawApplicationPulseScaleableFirstPage(int x, int y, int width, int height,
   frame.fillSmoothCircle(x + 10 * heart_scale, y - 30 * heart_scale, 14 * heart_scale, TFT_RED, TFT_RED);
 
   frame.setTextColor(TFT_WHITE);
-
-  float textScale = 4 * scale;
-  if(textScale>=3)
-  {
-    if(textScale>3.5){textScale=4;}else{textScale=2;}
-  }
-  //Serial.println("textScale "+String(textScale));
+  float textScale = 2 * scale;
+  frame.setTextSize(textScale);
 
   if(canPulse)
   {
-    frame.drawCentreString(String(heartrate.getAvgPulse())+" bpm", x, y + 30 * scale, textScale);
+    frame.drawCentreString(String(heartrate.getAvgPulse())+" bpm", x, y + 30 * scale, 2);
   }
   else
   {
-    frame.drawCentreString("Failed", x, y + 30 * scale, textScale);
+    frame.drawCentreString("Failed", x, y + 30 * scale, 2);
   }
+}
+
+String addZeros(int value) {
+  if(value>9) {
+    return String(value);
+  }
+  else {
+    return "0"+String(value);
+  }
+}
+
+void drawApplicationHomeScaleable0Page(int x, int y, int width, int height, float scale) {
+
+   if(sleepmode)
+  {
+    frame.fillSmoothCircle(x, y, (width/2) * scale, 0x0, 0x0);
+  
+    float textScale = 3 * scale;
+
+    frame.setTextColor(TFT_WHITE);
+    frame.setTextSize(textScale);
+    frame.drawCentreString(String(addZeros(hour()))+":"+String(addZeros(minute())), x, y - 25 * scale, 4);
+  }
+
+  if(!sleepmode)
+  {
+    frame.fillSmoothCircle(x, y, (width/2) * scale, 0x03BF, 0x03BF);
+  
+    float textScale = 3 * scale;
+
+    frame.setTextColor(TFT_BLACK);
+    frame.setTextSize(textScale);
+    frame.drawCentreString(String(addZeros(hour()))+":"+String(addZeros(minute())), x, y - 25 * scale, 4);
+    frame.drawCentreString(String(addZeros(second())), x, y - (25 * scale) + (60 * scale) , 2);
+  }
+
+ 
+
 }
 
 void drawApplicationHomeScaleableFirstPage(int x, int y, int width, int height, float scale) {
@@ -350,6 +421,12 @@ void drawApplicationHomeScaleableFirstPage(int x, int y, int width, int height, 
     }
   }
   
+  float textScale = 1.5 * scale;
+  frame.setTextSize(textScale);
+
+  frame.setTextColor(TFT_BLACK);
+  frame.drawCentreString(String(voltage)+"v", x, y + 30 * scale, 2);
+
   // Piirretään tuntiviisari
   float hourAngle = ((hour() % 12) * 30 + (minute() / 2)) * PI / 180 - PI / 2; // Tuntiviisari liikkuu myös minuuttien mukaan
   float hourX = cos(hourAngle) * (width/2 - 50)* scale + x; // Lyhyempi
@@ -382,7 +459,14 @@ void drawApplicationHomeScaleableFirstPage(int x, int y, int width, int height, 
 }
 
 void drawApplicationHome() {
-  drawApplicationHomeScaleableFirstPage( SCREEN_WIDTH/2, SCREEN_HEIGHT/2, SCREEN_WIDTH, SCREEN_HEIGHT, 1);
+  if(homescreen_theme == 0)
+  {
+    drawApplicationHomeScaleable0Page( SCREEN_WIDTH/2, SCREEN_HEIGHT/2, SCREEN_WIDTH, SCREEN_HEIGHT, 1);
+  }
+  if(homescreen_theme == 1)
+  {
+    drawApplicationHomeScaleableFirstPage( SCREEN_WIDTH/2, SCREEN_HEIGHT/2, SCREEN_WIDTH, SCREEN_HEIGHT, 1);
+  }
 }
 
 void drawApplicationPulse() {
@@ -415,7 +499,13 @@ void drawApplicationMenu(int x_offset, int y_offset, int app_size) {
            if(appId == 4)
            {
               // tähän piirretään skaalaamaton sovellus ikoni
-              drawApplicationHomeScaleableFirstPage(x, y + bonus_offset, SCREEN_WIDTH, SCREEN_HEIGHT, 0.3);
+              if(homescreen_theme == 0) {
+                drawApplicationHomeScaleable0Page(x, y + bonus_offset, SCREEN_WIDTH, SCREEN_HEIGHT, 0.3);
+              }
+
+              if(homescreen_theme == 1) {
+                drawApplicationHomeScaleableFirstPage(x, y + bonus_offset, SCREEN_WIDTH, SCREEN_HEIGHT, 0.3);
+              }
            }
            else if(appId == 5)
            {
@@ -443,7 +533,12 @@ void drawApplicationMenu(int x_offset, int y_offset, int app_size) {
   
   if(selectedApplication == 4)
   {
-    drawApplicationHomeScaleableFirstPage(selectedX, selectedY, SCREEN_WIDTH, SCREEN_HEIGHT, scaleval);
+    if(homescreen_theme == 1) {
+      drawApplicationHomeScaleableFirstPage(selectedX, selectedY, SCREEN_WIDTH, SCREEN_HEIGHT, scaleval);
+    }
+    if(homescreen_theme == 0) {
+      drawApplicationHomeScaleable0Page(selectedX, selectedY, SCREEN_WIDTH, SCREEN_HEIGHT, scaleval);
+    }
   }
   if(selectedApplication == 5)
   {
