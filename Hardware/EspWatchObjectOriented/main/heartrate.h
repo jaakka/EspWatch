@@ -10,16 +10,24 @@ class HEARTRATE {
 public:
     HEARTRATE();
     bool begin();
-    bool pulseDetected();
     void loop();
+    bool pulseDetected();
     uint8_t getAvgPulse();
     uint8_t getAvgSpO2();
     bool wristDetected();
-    void enableSensor();
-    void disableSensor();
+
+
+    bool enableSensor();
+    bool disableSensor();
+    bool setMode(const char* mode);
+    bool setSamplingRate(uint16_t rate);
+    bool setSampleAveraging(uint8_t samples);
+    bool setLedCurrent(const char* led, float current);
+    bool setPulseWidth(uint16_t pulseWidth);
+
 
     bool sensorEnabled = false;
-
+    // TODO: Move required variables from private to public for the settings app to access
 private:
     bool wrist = false;
 
