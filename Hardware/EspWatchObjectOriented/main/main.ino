@@ -7,6 +7,7 @@
 #define SCREEN_HEIGHT 240
 #define SCREEN_CALCULATED 57600 // 240 * 240
 
+#define GyroIntPin 23
 #define LCD_BACKLIGHT 32
 #define VOLTAGE 35
 
@@ -68,10 +69,17 @@ void setup() {
   sleeptime = millis();
   setTime(0, 0, 00, 1, 12, 2024);
   heartrate.enableSensor();
+  pinMode(GyroIntPin,INPUT);
+  attachInterrupt(digitalPinToInterrupt(GyroIntPin), gyroInterrupt, RISING);
   pinMode(LCD_BACKLIGHT,OUTPUT);
   pinMode(VOLTAGE,INPUT);
   analogWrite(LCD_BACKLIGHT,(int)(((float)255/100)*SCREEN_BRIGHTNESS));
 }
+
+void gyroInterrupt() {
+  Serial.println("Gyro interrupt triggered!");
+}
+
 
 void loop() {
   voltage = analogRead(VOLTAGE) * voltageMultiplier + 0.4;    // 0.4 is compensation for schottky diode voltage drop
