@@ -51,7 +51,7 @@ constexpr float voltageMultiplier = (3.3 / 4095.0) * 3.32;     // 3.32 is compen
 int homescreen_theme = 1;
 
 unsigned long sleeptime = 0;
-int waitsleep = 100000;
+int waitsleep = 5000;
 int averagePulsePerHour[24] = {-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1};
 int lastpulse = 0;
 bool sleepmode = false;
@@ -130,6 +130,7 @@ void setup() {
 
 void gyroInterrupt() {
   Serial.println("Gyro interrupt triggered!");
+  sleeptime = millis();
 }
 
 
@@ -602,11 +603,16 @@ void drawApplicationMenu(int x_offset, int y_offset, int app_size) {
               // tähän piirretään skaalaamaton sovellus ikoni
               drawApplicationPulseScaleableFirstPage(x, y + bonus_offset, SCREEN_WIDTH, SCREEN_HEIGHT, 0.3);
            }
-           else
+           else if(appId == 8)
            {
               //joku muu kuin kellosovellus
               frame.fillSmoothCircle(x, y + bonus_offset, (app_size/2) ,0x0210,0x0210);
            }
+           /*else
+           {
+              //joku muu kuin kellosovellus
+              frame.fillSmoothCircle(x, y + bonus_offset, (app_size/2) ,0x0210,0x0210);
+           }*/
         }
         else
         {
@@ -699,10 +705,12 @@ void getNearestApplication(int x_offset, int y_offset, int app_size) {
       int dist = sqrt(pow(current_xpos - app_x, 2) + pow(current_ypos - app_y, 2));
       if(dist < nearest_dist)
       {
-        nearest_app = appId;
-        nearest_dist = dist;
-        nearest_app_x = app_x;
-        nearest_app_y = app_y;
+        if(appId == 4 || appId == 5 || appId == 8) {
+          nearest_app = appId;
+          nearest_dist = dist;
+          nearest_app_x = app_x;
+          nearest_app_y = app_y;
+        }
       }
       appId++;
     }
