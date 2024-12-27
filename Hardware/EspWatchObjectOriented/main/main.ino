@@ -18,7 +18,7 @@ TFT_eSPI lcd = TFT_eSPI();
 TFT_eSprite frame = TFT_eSprite(&lcd);
 TOUCH touch;
 HEARTRATE heartrate;
-int pulseAnim = 0;
+int pulseAnim = 14;
 
 enum App
 {
@@ -173,16 +173,17 @@ void loop() {
     }
   }
 
-
-  
-  // FIXME: Pulseanimation doesn't work, is the problem here or in heartrate.cpp in pulseDetected? (Does the pulseDetected() stay true constantly like it should or does it turn false briefly?)
   if(heartrate.sensorEnabled && (application == PULSE || application == MENU) && !sleepmode)
   {
-    if(heartrate.pulseDetected()){pulseAnim=15;}
-
-    if(pulseAnim > 7)
-    {
-      pulseAnim--;
+    if(heartrate.pulseDetected()){pulseAnim=13;} // Animation can start if 15 turns 14
+    //this make heart stay big if pulse not detected
+    if(pulseAnim<14) {
+      if(pulseAnim > 7) {
+        pulseAnim--;
+      }
+      else {
+        pulseAnim = 14; // Reset pulse animation
+      }
     }
   }
 
@@ -407,7 +408,12 @@ void drawApplicationPulseScaleableFirstPage(int x, int y, int width, int height,
 
   if(canPulse)
   {
+    if(heartrate.wristDetected()){
     frame.drawCentreString(String(heartrate.getAvgPulse())+" bpm", x, y + 30 * scale, 2);
+    } else {
+      frame.drawCentreString("No wrist", x, y + 25 * scale, 1);
+      frame.drawCentreString("detected", x, y + 50 * scale, 1);
+    }
   }
   else
   {
