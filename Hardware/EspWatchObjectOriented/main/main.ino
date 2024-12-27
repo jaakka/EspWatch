@@ -50,6 +50,8 @@ float voltage = 0;
 constexpr float voltageMultiplier = (3.3 / 4095.0) * 3.32;     // 3.32 is compensation for the voltage divider
 int homescreen_theme = 1;
 int notifyview_y = 0;
+bool notifyopen = false;
+bool notifyarefullopen = false;
 
 unsigned long sleeptime = 0;
 int waitsleep = 50000;
@@ -225,7 +227,7 @@ void loop() {
     sleeptime = millis();
   }
 
-  if(application != MENU && (last_slide+500) < millis()) {
+  if(application != MENU && !notifyopen && (last_slide+500) < millis()) {
     if(touch.userSwipeRight()) {
       Serial.println("sovellus oikealle");
       if(applicationPage > applicationMinPage) {
@@ -269,8 +271,73 @@ void loop() {
     drawApplicationPulse();
     handleApplicationPulse();
   }
+  drawNotifyView();
+  handleNotifyView();
   frame.pushSprite(0,0);
 }
+
+void drawNotifyView() {
+if(notifyview_y != 0) {
+    frame.fillSmoothCircle(SCREEN_WIDTH/2, notifyview_y - SCREEN_HEIGHT/2, SCREEN_WIDTH/2+4, TFT_WHITE, TFT_WHITE);
+    frame.fillSmoothCircle(SCREEN_WIDTH/2, notifyview_y - SCREEN_HEIGHT/2, SCREEN_WIDTH/2, TFT_BLACK, TFT_BLACK);
+
+    if(notifyarefullopen){
+    frame.fillRect(0, 0, SCREEN_WIDTH, notifyview_y - SCREEN_HEIGHT/2, TFT_BLACK);
+    frame.setTextColor(TFT_WHITE);
+    frame.setTextSize(2);
+    frame.drawCentreString("No notifications", SCREEN_WIDTH/2, notifyview_y - (SCREEN_HEIGHT/2 + 30), 2);
+    }else{
+      frame.fillSmoothCircle(SCREEN_WIDTH/2, notifyview_y, 28, TFT_WHITE, TFT_WHITE);
+      frame.fillSmoothCircle(SCREEN_WIDTH/2-63, notifyview_y-12, 28, TFT_WHITE, TFT_WHITE);
+      frame.fillSmoothCircle(SCREEN_WIDTH/2+63, notifyview_y-12, 28, TFT_WHITE, TFT_WHITE);
+    }
+  }
+}
+
+void handleNotifyView() {
+  if(application != MENU)
+  {
+  if(touch.userTouch()) {
+    if(!notifyopen) {
+      if(touch.y < 40) {
+        notifyview_y = touch.y;
+        notifyopen = true;
+      }
+    } else { //notify open
+      notifyview_y = touch.y;
+    }
+  } else { // user released touch
+    if(notifyview_y < 80) {
+      if(notifyview_y < 40) {
+       notifyopen = false;
+       notifyarefullopen = false;
+      }else{
+       notifyopen = true;
+       notifyarefullopen = false;
+      }
+    } else {
+      notifyopen = true;
+      notifyarefullopen = true;
+    }
+    for(int i=0; i<10; i++){
+    if(notifyopen)
+    {
+      if(notifyarefullopen){
+      if(notifyview_y < SCREEN_HEIGHT) {notifyview_y++;} 
+      }else{
+        if(notifyview_y < 55) {notifyview_y++;} 
+      }
+    } 
+    else {if(notifyview_y > 0) {notifyview_y--;} }
+    }
+  }
+  }
+  /*
+  int notifyview_y = 0;
+bool notifyopen = false;
+int notifyoffset = 0; 
+*/ 
+} 
 
 uint8_t rgbTo8Bit(uint8_t red, uint8_t green, uint8_t blue) {
   red = red & 0x07;   
@@ -286,7 +353,7 @@ uint16_t rgbTo16Bit(uint8_t red, uint8_t green, uint8_t blue) {
   return (red << 11) | (green << 5) | blue;
 }
 void handleApplicationPulse() {
-  if(touch.userSwipeUp()) { //touch.userSwipeRight()) {
+  if(touch.userSwipeUp() && !notifyopen) { //touch.userSwipeRight()) {
     application = MENU;
     openApp = false;
     Serial.println("close app");
@@ -294,7 +361,7 @@ void handleApplicationPulse() {
 }
 
 void handleApplicationHomeTouch() {
-  if(touch.userSwipeUp()) { // touch.userSwipeRight() 
+  if(touch.userSwipeUp() && !notifyopen) { // touch.userSwipeRight() 
     application = MENU;
     openApp = false;
     Serial.println("close app");
