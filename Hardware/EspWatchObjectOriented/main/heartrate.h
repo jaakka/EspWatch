@@ -27,7 +27,11 @@ public:
 
 
     bool sensorEnabled = false;
-    // TODO: Move required variables from private to public for the settings app to access
+
+    // Wrist Detection threshold and cooldown
+    const unsigned long kDetectionThreshold = 10000;          // Change this to adjust sensitivity      // TODO: Implement DetectionThreshold calibration/auto-adjustment into the settings app
+    const unsigned int kDetectionCooldownMs = 500;
+    
 private:
     bool wrist = false;
 
@@ -40,9 +44,6 @@ private:
     const MAX30102::SamplingRate kSamplingRate = MAX30102::SAMPLING_RATE_400SPS;                        // TODO: Test different sampling rates to find the lowest possible rate for power saving with good accuracy
     const float kSamplingFrequency = 400.0;                                                             // TODO: Investigate optimal sampling frequency, is it kSamplingRate = kSamplingFrequency?
 
-    // Wrist Detection threshold and cooldown
-    const unsigned long kDetectionThreshold = 10000;          // Change this to adjust sensitivity      // TODO: Implement DetectionThreshold calibration/auto-adjustment into the settings app
-    const unsigned int kDetectionCooldownMs = 500;
     // Timestamp for wrist detection
     long detection_timestamp = 0;
     bool wrist_detected = false;
