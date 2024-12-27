@@ -51,8 +51,60 @@ constexpr float voltageMultiplier = (3.3 / 4095.0) * 3.32;     // 3.32 is compen
 int homescreen_theme = 1;
 
 unsigned long sleeptime = 0;
-int waitsleep = 6000;
+int waitsleep = 100000;
+int averagePulsePerHour[24] = {-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1};
+int lastpulse = 0;
 bool sleepmode = false;
+
+void updatePulse(int newpulse) {
+  if(lastpulse != newpulse) {
+    for(int i=0; i<24; i++) {
+      if(averagePulsePerHour[i] == -1) {
+        averagePulsePerHour[i] = newpulse;
+        break;
+      }
+    }
+    lastpulse = newpulse;
+  }
+}
+
+String getMaxPulse() {
+  int maxPulse = 0;
+  for(int i=0; i<24; i++) {
+    if(averagePulsePerHour[i] == -1) {
+      break;
+    }
+    else {
+      if(maxPulse < averagePulsePerHour[i]) {
+        maxPulse = averagePulsePerHour[i];
+      }
+    }
+  }
+  if(maxPulse == 0) {
+    return "-";
+  } else {
+    return String(maxPulse);
+  }
+}
+
+String getMinPulse() {
+  int minPulse = 999;
+  for(int i=0; i<24; i++) {
+    if(averagePulsePerHour[i] == -1) {
+      break;
+    }
+    else {
+      if(minPulse > averagePulsePerHour[i]) {
+        minPulse = averagePulsePerHour[i];
+      }
+    }
+  }
+  if(minPulse == 999) {
+    return "-";
+  } else {
+    return String(minPulse);
+  }
+}
 
 void setup() {
   Serial.begin(115200);
@@ -83,6 +135,7 @@ void gyroInterrupt() {
 
 void loop() {
   voltage = analogRead(VOLTAGE) * voltageMultiplier + 0.4;    // 0.4 is compensation for schottky diode voltage drop
+  updatePulse(heartrate.getAvgPulse());
   heartrate.loop();
 
   if(!(sleeptime + waitsleep < millis()) && sleepmode) {
@@ -253,31 +306,59 @@ void drawApplicationPulse0page() {
 
   frame.drawCentreString("Daily", SCREEN_WIDTH/2, 50 , 1);
 
+  if(averagePulsePerHour[0] != -1) {
   int x_offset = (SCREEN_WIDTH/2) - 80;
   int y_offset = (SCREEN_HEIGHT/2) + 50;
   int margin = 160/24;
   int lastsize = 20;
   int lastx =0;
+
+  String minPulse = getMinPulse();
+  String maxPulse = getMaxPulse();
+
+  if(maxPulse != "-") {
+    frame.drawWideLine((SCREEN_WIDTH/2) - 80, y_offset - (maxPulse.toInt()/2), (SCREEN_WIDTH/2) + 80, y_offset - (maxPulse.toInt()/2), 1, TFT_BLUE);
+  }
+
+  if(minPulse != "-") {
+    frame.drawWideLine((SCREEN_WIDTH/2) - 80, y_offset - (minPulse.toInt()/2), (SCREEN_WIDTH/2) + 80, y_offset - (minPulse.toInt()/2), 1, TFT_GREEN);
+  }
+  
+
   for(int i=0; i<24; i++) {
-    int newsize = random(0,80);
+    int newsize = averagePulsePerHour[i]; //random(0,80);
+    if(newsize == -1){break;}else{newsize = newsize/2;}
+    if(i == 0){lastsize = newsize;} // start 
     frame.drawWideLine(x_offset + margin*i, y_offset - lastsize, x_offset + margin + margin*i, y_offset - newsize, 2, TFT_RED);
     lastx = x_offset + margin + margin*i;
     lastsize = newsize;
   }
 
-  frame.drawCircle(lastx + 3,  (y_offset - 3) - lastsize, 3, TFT_WHITE);
+  frame.drawCircle(lastx + 3,  (y_offset - 1.5) - lastsize, 3, TFT_WHITE);
 
   frame.setTextSize(1);
 
-  frame.drawCentreString("Min 20bpm", SCREEN_WIDTH/2, (SCREEN_HEIGHT/2) + 60 , 2);
-  frame.drawCentreString("Max 80bpm", SCREEN_WIDTH/2, (SCREEN_HEIGHT/2) + 75 , 2);
+  frame.setTextColor(TFT_GREEN);
+  
+  frame.drawCentreString("Min "+minPulse+"bpm", SCREEN_WIDTH/2, (SCREEN_HEIGHT/2) + 60 , 2);
+
+  frame.setTextColor(TFT_BLUE);
+  
+  frame.drawCentreString("Max "+maxPulse+"bpm", SCREEN_WIDTH/2, (SCREEN_HEIGHT/2) + 75 , 2);
+
 
     //left line
   frame.drawWideLine((SCREEN_WIDTH/2) - 80, (SCREEN_HEIGHT/2) - 20, (SCREEN_WIDTH/2) - 80, (SCREEN_HEIGHT/2) + 50, 2, TFT_WHITE);
 
   //bottom line
   frame.drawWideLine((SCREEN_WIDTH/2) - 80, (SCREEN_HEIGHT/2) + 50, (SCREEN_WIDTH/2) + 80, (SCREEN_HEIGHT/2) + 50, 2, TFT_WHITE);
-
+  }
+  else
+  {
+    frame.setTextColor(TFT_WHITE);
+    frame.setTextSize(2);
+    frame.drawCentreString("Data not available", SCREEN_WIDTH/2, (SCREEN_HEIGHT/2) + 10 , 2);
+  }
 }
 
 void drawApplicationPulse2page() {
