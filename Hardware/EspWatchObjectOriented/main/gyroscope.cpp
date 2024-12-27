@@ -9,11 +9,12 @@ GYROSCOPE::GYROSCOPE()
 bool GYROSCOPE::begin() {
     if (obj.begin()) 
     {
-        Serial.println("Sensor initialized");
+        Serial.println("Gyroscope initialized");
         return true;
     } 
     else 
     {
+        Serial.println("Gyroscope initialization failed");
         return false;
     }
 }

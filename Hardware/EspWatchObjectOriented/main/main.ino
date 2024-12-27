@@ -1,7 +1,9 @@
 #include <TFT_eSPI.h>
+#include <TimeLib.h> // (Time by Michael Margolis).
 #include "touch.h"
 #include "heartrate.h"
-#include <TimeLib.h> // (Time by Michael Margolis).
+#include "gyroscope.h"
+#include "debug.h"
 
 #define SCREEN_WIDTH 240
 #define SCREEN_HEIGHT 240
@@ -18,7 +20,10 @@ TFT_eSPI lcd = TFT_eSPI();
 TFT_eSprite frame = TFT_eSprite(&lcd);
 TOUCH touch;
 HEARTRATE heartrate;
+GYROSCOPE gyroscope;
+DEBUG debug(heartrate, gyroscope);
 int pulseAnim = 14;
+
 
 enum App
 {
@@ -113,10 +118,16 @@ void setup() {
   Serial.begin(115200);
   touch.init();
   lcd.begin();
-  int trytimes = 100;
+
+  uint8_t trytimes = 100;
   while(true){
     if(heartrate.begin()){canPulse=true; break;}else{if(trytimes>0){trytimes--;}else{break;}}
   }
+  trytimes = 100;
+  while (true) {
+    if (gyroscope.begin()){break;}else{if(trytimes>0){trytimes--;}else{break;}}
+  }
+
   lcd.setRotation(1);
   lcd.fillScreen(0);
   frame.createSprite(SCREEN_WIDTH, SCREEN_HEIGHT, TFT_TRANSPARENT);
@@ -124,7 +135,7 @@ void setup() {
   sleeptime = millis();
   setTime(0, 0, 00, 1, 12, 2024);
   heartrate.enableSensor();
-  pinMode(GyroIntPin,INPUT);
+  pinMode(GyroIntPin,INPUT_PULLDOWN);
   attachInterrupt(digitalPinToInterrupt(GyroIntPin), gyroInterrupt, RISING);
   pinMode(LCD_BACKLIGHT,OUTPUT);
   pinMode(VOLTAGE,INPUT);
@@ -138,6 +149,8 @@ void gyroInterrupt() {
 
 
 void loop() {
+  //debug.loop();
+
   voltage = analogRead(VOLTAGE) * voltageMultiplier + 0.4;    // 0.4 is compensation for schottky diode voltage drop
   updatePulse(heartrate.getAvgPulse());
   heartrate.loop();
