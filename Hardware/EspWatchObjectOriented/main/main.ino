@@ -46,6 +46,7 @@ unsigned long last_release = 0;
 bool canPulse = false;
 unsigned long last_slide = 0;
 float voltage = 0;
+constexpr float voltageMultiplier = (3.3 / 4095.0) * 3.32;     // 3.32 is compensation for the voltage divider
 int homescreen_theme = 1;
 
 unsigned long sleeptime = 0;
@@ -73,7 +74,7 @@ void setup() {
 }
 
 void loop() {
-  voltage = analogRead(VOLTAGE) * (5.0 / 4095.0); // 12bit esp32 ?
+  voltage = analogRead(VOLTAGE) * voltageMultiplier + 0.4;    // 0.4 is compensation for schottky diode voltage drop
   heartrate.loop();
 
   if(!(sleeptime + waitsleep < millis()) && sleepmode) {
