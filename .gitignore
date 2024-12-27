@@ -1,2 +1,4 @@
 Simulation/__pycache__/
 .vscode/
+debug.cpp
+debug.h
