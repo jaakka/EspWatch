@@ -47,6 +47,7 @@ private:
     // Timestamp for wrist detection
     long detection_timestamp = 0;
     bool wrist_detected = false;
+    long last_pulse_detected = 0;
 
     // Heartbeat detection
     // Timestamp of the last heartbeat

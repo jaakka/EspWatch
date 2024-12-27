@@ -49,9 +49,10 @@ unsigned long last_slide = 0;
 float voltage = 0;
 constexpr float voltageMultiplier = (3.3 / 4095.0) * 3.32;     // 3.32 is compensation for the voltage divider
 int homescreen_theme = 1;
+int notifyview_y = 0;
 
 unsigned long sleeptime = 0;
-int waitsleep = 5000;
+int waitsleep = 50000;
 int averagePulsePerHour[24] = {-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1};
 int lastpulse = 0;
 bool sleepmode = false;

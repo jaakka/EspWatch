@@ -31,7 +31,11 @@ bool HEARTRATE::begin() {
 }
 
 bool HEARTRATE::pulseDetected() {
-    return wrist_detected; //THIS IS TEST, IF WRIST DETECTED MAKE PULSE ANIMATIONS
+    if(last_pulse_detected + 50 > millis()) {
+      return true;
+    } else {
+      return false;
+    }
 }
 
 uint8_t HEARTRATE::getAvgPulse() {
@@ -335,6 +339,7 @@ void HEARTRATE::loop() {
       // Detect Heartbeat - Falling Edge Threshold
       if(crossed && current_diff < kEdgeThreshold) {
         if(last_heartbeat != 0 && crossed_time - last_heartbeat > 300) {
+          last_pulse_detected = millis();
           // Show Results
           int bpm = 60000/(crossed_time - last_heartbeat);
           float rred = (stat_red.maximum()-stat_red.minimum())/stat_red.average();
