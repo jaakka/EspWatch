@@ -116,10 +116,16 @@ void setup() {
   Serial.begin(115200);
   touch.init();
   lcd.begin();
-  int trytimes = 100;
+
+  uint8_t trytimes = 100;
   while(true){
     if(heartrate.begin()){canPulse=true; break;}else{if(trytimes>0){trytimes--;}else{break;}}
   }
+  trytimes = 100;
+  while (true) {
+    if (gyroscope.begin()){break;}else{if(trytimes>0){trytimes--;}else{break;}}
+  }
+
   lcd.setRotation(1);
   lcd.fillScreen(0);
   frame.createSprite(SCREEN_WIDTH, SCREEN_HEIGHT, TFT_TRANSPARENT);
