@@ -7,6 +7,7 @@
 #define SCREEN_HEIGHT 240
 #define SCREEN_CALCULATED 57600 // 240 * 240
 
+#define GyroIntPin 23
 #define LCD_BACKLIGHT 32
 #define VOLTAGE 35
 
@@ -46,6 +47,7 @@ unsigned long last_release = 0;
 bool canPulse = false;
 unsigned long last_slide = 0;
 float voltage = 0;
+constexpr float voltageMultiplier = (3.3 / 4095.0) * 3.32;     // 3.32 is compensation for the voltage divider
 int homescreen_theme = 1;
 
 unsigned long sleeptime = 0;
@@ -119,14 +121,21 @@ void setup() {
   sleeptime = millis();
   setTime(0, 0, 00, 1, 12, 2024);
   heartrate.enableSensor();
+  pinMode(GyroIntPin,INPUT);
+  attachInterrupt(digitalPinToInterrupt(GyroIntPin), gyroInterrupt, RISING);
   pinMode(LCD_BACKLIGHT,OUTPUT);
   pinMode(VOLTAGE,INPUT);
   analogWrite(LCD_BACKLIGHT,(int)(((float)255/100)*SCREEN_BRIGHTNESS));
 }
 
+void gyroInterrupt() {
+  Serial.println("Gyro interrupt triggered!");
+}
+
+
 void loop() {
+  voltage = analogRead(VOLTAGE) * voltageMultiplier + 0.4;    // 0.4 is compensation for schottky diode voltage drop
   updatePulse(heartrate.getAvgPulse());
-  voltage = analogRead(VOLTAGE) * (5.0 / 4095.0); // 12bit esp32 ?
   heartrate.loop();
 
   if(!(sleeptime + waitsleep < millis()) && sleepmode) {
