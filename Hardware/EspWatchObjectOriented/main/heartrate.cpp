@@ -20,12 +20,13 @@ bool HEARTRATE::begin() {
     {
         if (obj.setSamplingRate(kSamplingRate)) 
         {
-            Serial.println("Sensor initialized");
+            Serial.println("Heartrate sensor initialized");
         }
         return true;
     } 
     else 
     {
+        Serial.println("Heartrate sensor initialization failed");
         return false;
     }
 }
@@ -54,7 +55,6 @@ bool HEARTRATE::wristDetected() { //käyttäjän ranne tunnistettu
 
 
 
-// TODO: Test enableSensor, disableSensor, setMode, setSamplingrate, setSampleAveraging, setLedCurrent, setPulseWidth
 /**
  * @returns true if successful, false if failed
  */
@@ -202,7 +202,7 @@ bool HEARTRATE::setSampleAveraging(uint8_t samples) {
   }
 }
 
-
+// FIXME: setLedCurrent() doesn't work, returns false
 /** 
  * @param led "LED_RED" or "LED_IR"
  * @param current Current in mA (0-50) in 0.2mA steps, Default: Red 18mA, IR 16mA
