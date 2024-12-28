@@ -56,13 +56,20 @@ unsigned long last_slide = 0;
 float voltage = 0;
 constexpr float voltageMultiplier = (3.3 / 4095.0) * 3.32;     // 3.32 is compensation for the voltage divider
 int homescreen_theme = 1;
+
 int notifyview_y = 0;
-int notifystart_y = 0;
 bool notifyopen = false;
 bool notifyarefullopen = false;
+bool notify_userDrag = false;
+int notify_offset = 0;
+int notify_startpos = 0;
+int notify_target = -1;
+unsigned long notify_drag_start = 0;
 
 bool pulseenabled = true;
 bool gyroscopeenabled = true;
+bool hallenabled = true;
+
 unsigned long lastuserbtn = 0;
 
 unsigned long sleeptime = 0;
@@ -196,6 +203,8 @@ void loop() {
         sleepmode = true;
         openApp = true;
         analogWrite(LCD_BACKLIGHT,(int)(((float)255/100)*SCREEN_SLEEP_BRIGHTNESS));
+        notifyview_y = 0;
+        notifyopen = false;
       }
     }
   }
@@ -301,7 +310,24 @@ void loop() {
   frame.pushSprite(0,0);
 }
 
+void drawNotifyBtn(int x, int y, bool btnState, String txt) {
+    // btn background
+    frame.fillSmoothCircle(x, y, 28, TFT_WHITE, TFT_WHITE);
+    frame.setTextSize(1);
+    frame.setTextColor(TFT_BLACK);
+    if(btnState) {
+      frame.fillSmoothCircle(x, y, 26, TFT_GREEN, TFT_GREEN);
+       frame.drawCentreString(txt, x, y - 8, 2);
+      frame.drawCentreString("Enabled", x, y + 8, 2);
+    } else {
+      frame.fillSmoothCircle(x, y, 26, TFT_RED, TFT_RED);
+       frame.drawCentreString(txt, x, y - 8, 2);
+      frame.drawCentreString("Disabled", x, y + 8, 2);
+    }
+}
+
 void drawNotifyView() {
+
 if(notifyview_y != 0) {
     frame.fillSmoothCircle(SCREEN_WIDTH/2, notifyview_y - SCREEN_HEIGHT/2, SCREEN_WIDTH/2+4, TFT_WHITE, TFT_WHITE);
     frame.fillSmoothCircle(SCREEN_WIDTH/2, notifyview_y - SCREEN_HEIGHT/2, SCREEN_WIDTH/2, TFT_BLACK, TFT_BLACK);
@@ -314,109 +340,97 @@ if(notifyview_y != 0) {
     }
     if(notifyview_y < SCREEN_HEIGHT)
     {
-      frame.fillSmoothCircle(SCREEN_WIDTH/2, notifyview_y, 28, TFT_WHITE, TFT_WHITE);
 
-      if(!pulseenabled) {
-       frame.fillSmoothCircle(SCREEN_WIDTH/2, notifyview_y, 26, TFT_BLACK, TFT_BLACK);
-      } else {
-       frame.fillSmoothCircle(SCREEN_WIDTH/2, notifyview_y, 26, TFT_WHITE, TFT_WHITE);
-      }
-
-      frame.fillSmoothCircle(SCREEN_WIDTH/2-63, notifyview_y-12, 28, TFT_WHITE, TFT_WHITE);
-      if(!gyroscopeenabled) {
-      frame.fillSmoothCircle(SCREEN_WIDTH/2-63, notifyview_y-12, 26, TFT_BLACK, TFT_BLACK);
-      } else {
-        frame.fillSmoothCircle(SCREEN_WIDTH/2-63, notifyview_y-12, 26, TFT_WHITE, TFT_WHITE);
-      }
-      
-      frame.fillSmoothCircle(SCREEN_WIDTH/2+63, notifyview_y-12, 28, TFT_WHITE, TFT_WHITE);
-      frame.fillSmoothCircle(SCREEN_WIDTH/2+63, notifyview_y-12, 26, TFT_BLACK, TFT_BLACK);
+      drawNotifyBtn(SCREEN_WIDTH/2-63, notifyview_y-12, gyroscopeenabled, "Gyroscope");
+      drawNotifyBtn(SCREEN_WIDTH/2, notifyview_y, pulseenabled, "Heartrate");
+      drawNotifyBtn(SCREEN_WIDTH/2+63, notifyview_y-12, hallenabled, "Hall");
     }
   }
 }
+
+
+
 void handleNotifyView() {
   if (application != MENU) {
+
     if (touch.userTouch()) {
-      int touchX = touch.x;
-      int touchY = touch.y;
-
-      // Pallojen koordinaatit ja säde
-      int radius = 30;
-      int centerX1 = SCREEN_WIDTH / 2;
-      int centerY1 = notifyview_y;
-      int centerX2 = SCREEN_WIDTH / 2 - 63;
-      int centerY2 = notifyview_y - 12;
-      int centerX3 = SCREEN_WIDTH / 2 + 63;
-      int centerY3 = notifyview_y - 12;
-
-      // Tarkista, onko kosketus pallon sisällä
-      bool touchInCircle1 = sqrt(pow(touchX - centerX1, 2) + pow(touchY - centerY1, 2)) <= radius;
-      bool touchInCircle2 = sqrt(pow(touchX - centerX2, 2) + pow(touchY - centerY2, 2)) <= radius;
-      bool touchInCircle3 = sqrt(pow(touchX - centerX3, 2) + pow(touchY - centerY3, 2)) <= radius;
-
-      if(lastuserbtn+1000 < millis()) {
-        if(touchInCircle1) {
-          Serial.println("Pulse");
-          pulseenabled = !pulseenabled;
-          lastuserbtn = millis();
-        } else if(touchInCircle2) {
-          Serial.println("Gyro");
-          gyroscopeenabled = !gyroscopeenabled;
-          lastuserbtn = millis();
-        } else if(touchInCircle3) {
-          //pulseenabled = !pulseenabled;
-          lastuserbtn = millis();
-        }
-      }
-
-      if (!notifyopen) {
-        if (touch.y < 40) {
-          notifystart_y = touch.y;
-          notifyopen = true;
-        }
-      } else if (!touchInCircle1 && !touchInCircle2 && !touchInCircle3) { // notify open and not touching circles
-        notifyview_y = touch.y - notifystart_y;
-      }
-    } else { // user released touch
-      int halfScreenHeight = SCREEN_HEIGHT / 2;
-      int quarterScreenHeight = SCREEN_HEIGHT / 4;
-
-      if (notifyview_y < halfScreenHeight) {
-        if (!notifyarefullopen) {
-          if (notifyview_y < quarterScreenHeight) {
-            notifyopen = false;
-            notifyarefullopen = false;
-          } else {
-            notifyopen = true;
-            notifyarefullopen = false;
-          }
-        } else {
-          notifyarefullopen = false;
-          notifyopen = false;
+      if(!notify_userDrag) {
+        if(notifyview_y != 0 || (notifyview_y == 0 && touch.y < 40) ) { 
+          notify_userDrag = true;
+          notify_offset = touch.y - notifyview_y;
+          notify_startpos = touch.y;
+          notify_drag_start = millis();
         }
       } else {
-        notifyopen = true;
-        notifyarefullopen = true;
+        notifyview_y = touch.y - notify_offset;
       }
+      if(notifyview_y>SCREEN_HEIGHT){notifyview_y=SCREEN_HEIGHT;}
+      
+    }
 
-      for (int i = 0; i < 10; i++) {
-        if (notifyopen) {
-          if (notifyarefullopen) {
-            if (notifyview_y < SCREEN_HEIGHT) {
-              notifyview_y++;
-            }
-          } else {
-            if (notifyview_y < 65) {
-              notifyview_y++;
-            } else if (notifyview_y > 65) {
-              notifyview_y--;
-            }
+    if (touch.userReleaseTouch()) {
+      if(notify_userDrag){
+        int presstime = millis() - notify_drag_start;
+        int btn_radius = 15;
+
+        bool btn1_vertical = touch.x > ((SCREEN_WIDTH/2) - btn_radius) && touch.x < ((SCREEN_WIDTH/2) + btn_radius);
+        bool btn1_horizontal = touch.y > ((notifyview_y+13) - btn_radius) && touch.y < ((notifyview_y+13) + btn_radius);
+        bool btn1 = btn1_vertical && btn1_horizontal;
+
+        bool btn2_vertical = touch.x > (((SCREEN_WIDTH/2)-63) - btn_radius) && touch.x < (((SCREEN_WIDTH/2)-63) + btn_radius);
+        bool btn2_horizontal = touch.y > ((notifyview_y+1) - btn_radius) && touch.y < ((notifyview_y+1) + btn_radius);
+        bool btn2 = btn2_vertical && btn2_horizontal;
+
+        bool btn3_vertical = touch.x > (((SCREEN_WIDTH/2)+63) - btn_radius) && touch.x < (((SCREEN_WIDTH/2)+63) + btn_radius);
+        bool btn3_horizontal = touch.y > ((notifyview_y+1) - btn_radius) && touch.y < ((notifyview_y+1) + btn_radius);
+        bool btn3 = btn3_vertical && btn3_horizontal;
+
+        if(presstime < 300)
+        {
+          if(btn1) {
+            pulseenabled = !pulseenabled;
           }
-        } else if (notifyview_y > 0) {
-          notifyview_y--;
+          if(btn2) {
+            gyroscopeenabled = !gyroscopeenabled;
+          }
+          if(btn3) {
+            hallenabled = !hallenabled;
+          }
+        }
+        notify_userDrag = false;
+      }
+        if((notify_startpos - touch.y) < 0 && notify_target == -1) {
+          int diff = abs(notify_startpos - touch.y);
+
+          if(diff > 50) {
+            notify_target = 240;
+            notifyarefullopen = true;
+          } else {
+            notify_target = 90;
+            notifyarefullopen = false;
+          }
+          notifyopen = true;
+        }
+
+        if((notify_startpos - touch.y) > 0) {
+           notify_target = 0;
+            notifyopen = false;
+        }
+    }
+
+      for(int i=0; i<20; i++) {
+        if(notify_target != -1) {
+          if(notify_target < notifyview_y) {
+            notifyview_y--;
+          }
+          if(notify_target > notifyview_y) {
+            notifyview_y++;
+          }
+          if(notify_target == notifyview_y) {
+            notify_target = -1;
+          }
         }
       }
-    }
   }
 }
 
@@ -612,7 +626,7 @@ void drawApplicationHomeScaleable0Page(int x, int y, int width, int height, floa
 
   if(!sleepmode)
   {
-    frame.fillSmoothCircle(x, y, (width/2) * scale, TFT_WHITE, TFT_WHITE);//0x03BF, 0x03BF);
+    frame.fillSmoothCircle(x, y, (width/2) * scale, 0x03BF, 0x03BF);//0x03BF, 0x03BF);
   
     float textScale = 3 * scale;
 
@@ -671,7 +685,7 @@ void drawApplicationHomeScaleableFirstPage(int x, int y, int width, int height, 
 
   if(!sleepmode)
   {
-  frame.fillSmoothCircle(x, y, (width/2) * scale, TFT_WHITE, TFT_WHITE); //0x03BF, 0x03BF
+  frame.fillSmoothCircle(x, y, (width/2) * scale, 0x03BF, 0x03BF); //0x03BF, 0x03BF
   
   for(int i = 0; i < 12; i++) {
     float angle = i * 30;
@@ -715,7 +729,7 @@ void drawApplicationHomeScaleableFirstPage(int x, int y, int width, int height, 
   frame.drawLine(x, y, secondX, secondY, TFT_RED);
 
   // Piirretään kellon keskusta
-  frame.fillSmoothCircle(x, y, 5 * scale, TFT_BLACK,TFT_BLACK);// 0x0210, 0x0210);
+  frame.fillSmoothCircle(x, y, 5 * scale, 0x0210,0x0210);// 0x0210, 0x0210);
   }
 }
 

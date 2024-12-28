@@ -18,6 +18,7 @@ public:
     bool userSwipeUp();
     bool userSwipeDown();
     bool userTouch();
+    bool userReleaseTouch();
     int x;
     int y;
 

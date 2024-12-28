@@ -62,3 +62,7 @@ bool TOUCH::userTouch() {
   }
   return false;
 }
+
+bool TOUCH::userReleaseTouch() {
+  return !TOUCH::userTouch();
+}
