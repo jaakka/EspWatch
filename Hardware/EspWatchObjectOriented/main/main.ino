@@ -61,6 +61,10 @@ int notifystart_y = 0;
 bool notifyopen = false;
 bool notifyarefullopen = false;
 
+bool pulseenabled = true;
+bool gyroscopeenabled = true;
+unsigned long lastuserbtn = 0;
+
 unsigned long sleeptime = 0;
 int waitsleep = 50000;
 int averagePulsePerHour[24] = {-1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1, -1,-1,-1,-1,-1,-1};
@@ -311,66 +315,110 @@ if(notifyview_y != 0) {
     if(notifyview_y < SCREEN_HEIGHT)
     {
       frame.fillSmoothCircle(SCREEN_WIDTH/2, notifyview_y, 28, TFT_WHITE, TFT_WHITE);
-      frame.fillSmoothCircle(SCREEN_WIDTH/2, notifyview_y, 26, TFT_BLACK, TFT_BLACK);
+
+      if(!pulseenabled) {
+       frame.fillSmoothCircle(SCREEN_WIDTH/2, notifyview_y, 26, TFT_BLACK, TFT_BLACK);
+      } else {
+       frame.fillSmoothCircle(SCREEN_WIDTH/2, notifyview_y, 26, TFT_WHITE, TFT_WHITE);
+      }
 
       frame.fillSmoothCircle(SCREEN_WIDTH/2-63, notifyview_y-12, 28, TFT_WHITE, TFT_WHITE);
+      if(!gyroscopeenabled) {
       frame.fillSmoothCircle(SCREEN_WIDTH/2-63, notifyview_y-12, 26, TFT_BLACK, TFT_BLACK);
+      } else {
+        frame.fillSmoothCircle(SCREEN_WIDTH/2-63, notifyview_y-12, 26, TFT_WHITE, TFT_WHITE);
+      }
       
       frame.fillSmoothCircle(SCREEN_WIDTH/2+63, notifyview_y-12, 28, TFT_WHITE, TFT_WHITE);
       frame.fillSmoothCircle(SCREEN_WIDTH/2+63, notifyview_y-12, 26, TFT_BLACK, TFT_BLACK);
     }
   }
 }
-
 void handleNotifyView() {
-  if(application != MENU)
-  {
-  if(touch.userTouch()) {
-    if(!notifyopen) {
-      if(touch.y < 40) {
-        notifystart_y = touch.y;
-        notifyopen = true;
+  if (application != MENU) {
+    if (touch.userTouch()) {
+      int touchX = touch.x;
+      int touchY = touch.y;
+
+      // Pallojen koordinaatit ja säde
+      int radius = 30;
+      int centerX1 = SCREEN_WIDTH / 2;
+      int centerY1 = notifyview_y;
+      int centerX2 = SCREEN_WIDTH / 2 - 63;
+      int centerY2 = notifyview_y - 12;
+      int centerX3 = SCREEN_WIDTH / 2 + 63;
+      int centerY3 = notifyview_y - 12;
+
+      // Tarkista, onko kosketus pallon sisällä
+      bool touchInCircle1 = sqrt(pow(touchX - centerX1, 2) + pow(touchY - centerY1, 2)) <= radius;
+      bool touchInCircle2 = sqrt(pow(touchX - centerX2, 2) + pow(touchY - centerY2, 2)) <= radius;
+      bool touchInCircle3 = sqrt(pow(touchX - centerX3, 2) + pow(touchY - centerY3, 2)) <= radius;
+
+      if(lastuserbtn+1000 < millis()) {
+        if(touchInCircle1) {
+          Serial.println("Pulse");
+          pulseenabled = !pulseenabled;
+          lastuserbtn = millis();
+        } else if(touchInCircle2) {
+          Serial.println("Gyro");
+          gyroscopeenabled = !gyroscopeenabled;
+          lastuserbtn = millis();
+        } else if(touchInCircle3) {
+          //pulseenabled = !pulseenabled;
+          lastuserbtn = millis();
+        }
       }
-    } else { //notify open
-      notifyview_y = touch.y - notifystart_y;
-    }
-  } else { // user released touch
-    if(notifyview_y < SCREEN_HEIGHT/2) {
-      if(!notifyarefullopen) {
-        if(notifyview_y < SCREEN_HEIGHT/4) {
-          notifyopen = false;
-          notifyarefullopen = false;
-        } else {
+
+      if (!notifyopen) {
+        if (touch.y < 40) {
+          notifystart_y = touch.y;
           notifyopen = true;
+        }
+      } else if (!touchInCircle1 && !touchInCircle2 && !touchInCircle3) { // notify open and not touching circles
+        notifyview_y = touch.y - notifystart_y;
+      }
+    } else { // user released touch
+      int halfScreenHeight = SCREEN_HEIGHT / 2;
+      int quarterScreenHeight = SCREEN_HEIGHT / 4;
+
+      if (notifyview_y < halfScreenHeight) {
+        if (!notifyarefullopen) {
+          if (notifyview_y < quarterScreenHeight) {
+            notifyopen = false;
+            notifyarefullopen = false;
+          } else {
+            notifyopen = true;
+            notifyarefullopen = false;
+          }
+        } else {
           notifyarefullopen = false;
+          notifyopen = false;
         }
       } else {
-        notifyarefullopen = false;
-        notifyopen = false;
+        notifyopen = true;
+        notifyarefullopen = true;
       }
-    } else {
-      notifyopen = true;
-      notifyarefullopen = true;
-    }
-    for(int i=0; i<10; i++){
-    if(notifyopen)
-    {
-      if(notifyarefullopen){
-      if(notifyview_y < SCREEN_HEIGHT) {notifyview_y++;} 
-      }else{
-        if(notifyview_y < 65) {notifyview_y++;} else {if(notifyview_y > 65) {notifyview_y--;}}
+
+      for (int i = 0; i < 10; i++) {
+        if (notifyopen) {
+          if (notifyarefullopen) {
+            if (notifyview_y < SCREEN_HEIGHT) {
+              notifyview_y++;
+            }
+          } else {
+            if (notifyview_y < 65) {
+              notifyview_y++;
+            } else if (notifyview_y > 65) {
+              notifyview_y--;
+            }
+          }
+        } else if (notifyview_y > 0) {
+          notifyview_y--;
+        }
       }
-    } 
-    else {if(notifyview_y > 0) {notifyview_y--;} }
     }
   }
-  }
-  /*
-  int notifyview_y = 0;
-bool notifyopen = false;
-int notifyoffset = 0; 
-*/ 
-} 
+}
 
 uint8_t rgbTo8Bit(uint8_t red, uint8_t green, uint8_t blue) {
   red = red & 0x07;   
@@ -489,6 +537,25 @@ void drawApplicationPulse2page() {
   frame.drawCentreString("Max 80bpm", SCREEN_WIDTH/2, (SCREEN_HEIGHT/2) + 75 , 2);
 }
 
+void drawApplicationBatteryScaleableFirstPage(int x, int y, int width, int height, float scale) {
+  frame.fillSmoothCircle(x, y, (width/2) * scale, rgbTo16Bit(50,50,50), rgbTo16Bit(50,50,50));
+  
+  frame.fillRect(x - 50*scale, y - 25*scale, 100*scale, 50*scale, TFT_BLACK);
+  frame.fillRect(x - 65*scale, y - 10*scale, 30*scale, 20*scale, TFT_BLACK);
+
+  float batteryScale = (float)voltage/6;
+  
+  int batteryWidth = (96 * scale) * batteryScale;
+  int batteryX = x - (48 * scale) + (96 * scale) - batteryWidth;
+  frame.fillRect(batteryX, y - 22 * scale, batteryWidth, 44 * scale, TFT_GREEN);
+
+  float textScale = 1.5 * scale;
+  frame.setTextSize(textScale);
+
+  frame.setTextColor(TFT_WHITE);
+  frame.drawCentreString(String(voltage)+"v", x, y + 30 * scale, 2);
+}
+
 void drawApplicationPulseScaleableFirstPage(int x, int y, int width, int height, float scale) {
   frame.fillSmoothCircle(x, y, (width/2) * scale, rgbTo16Bit(50,50,50), rgbTo16Bit(50,50,50));
   //tässä pitäisi piirtää sydänkuvake 
@@ -545,7 +612,7 @@ void drawApplicationHomeScaleable0Page(int x, int y, int width, int height, floa
 
   if(!sleepmode)
   {
-    frame.fillSmoothCircle(x, y, (width/2) * scale, 0x03BF, 0x03BF);
+    frame.fillSmoothCircle(x, y, (width/2) * scale, TFT_WHITE, TFT_WHITE);//0x03BF, 0x03BF);
   
     float textScale = 3 * scale;
 
@@ -598,13 +665,13 @@ void drawApplicationHomeScaleableFirstPage(int x, int y, int width, int height, 
   }
 
   // Piirretään kellon keskusta
-  frame.fillSmoothCircle(x, y, 5 * scale, TFT_WHITE, TFT_WHITE);
+  //frame.fillSmoothCircle(x, y, 5 * scale, TFT_WHITE, TFT_WHITE);
 
   }
 
   if(!sleepmode)
   {
-  frame.fillSmoothCircle(x, y, (width/2) * scale, 0x03BF, 0x03BF);
+  frame.fillSmoothCircle(x, y, (width/2) * scale, TFT_WHITE, TFT_WHITE); //0x03BF, 0x03BF
   
   for(int i = 0; i < 12; i++) {
     float angle = i * 30;
@@ -619,11 +686,7 @@ void drawApplicationHomeScaleableFirstPage(int x, int y, int width, int height, 
     }
   }
   
-  float textScale = 1.5 * scale;
-  frame.setTextSize(textScale);
-
-  frame.setTextColor(TFT_BLACK);
-  frame.drawCentreString(String(voltage)+"v", x, y + 30 * scale, 2);
+  
 
   // Piirretään tuntiviisari
   float hourAngle = ((hour() % 12) * 30 + (minute() / 2)) * PI / 180 - PI / 2; // Tuntiviisari liikkuu myös minuuttien mukaan
@@ -652,7 +715,7 @@ void drawApplicationHomeScaleableFirstPage(int x, int y, int width, int height, 
   frame.drawLine(x, y, secondX, secondY, TFT_RED);
 
   // Piirretään kellon keskusta
-  frame.fillSmoothCircle(x, y, 5 * scale, 0x0210, 0x0210);
+  frame.fillSmoothCircle(x, y, 5 * scale, TFT_BLACK,TFT_BLACK);// 0x0210, 0x0210);
   }
 }
 
@@ -712,8 +775,7 @@ void drawApplicationMenu(int x_offset, int y_offset, int app_size) {
            }
            else if(appId == 8)
            {
-              //joku muu kuin kellosovellus
-              frame.fillSmoothCircle(x, y + bonus_offset, (app_size/2) ,0x0210,0x0210);
+              drawApplicationBatteryScaleableFirstPage(x, y + bonus_offset, SCREEN_WIDTH, SCREEN_HEIGHT, 0.3);
            }
            /*else
            {
@@ -746,6 +808,10 @@ void drawApplicationMenu(int x_offset, int y_offset, int app_size) {
   if(selectedApplication == 5)
   {
     drawApplicationPulseScaleableFirstPage(selectedX, selectedY, SCREEN_WIDTH, SCREEN_HEIGHT, scaleval);
+  }
+  if(selectedApplication == 8)
+  {
+    drawApplicationBatteryScaleableFirstPage(selectedX, selectedY, SCREEN_WIDTH, SCREEN_HEIGHT, scaleval);
   }
  
   if(isDragging)
