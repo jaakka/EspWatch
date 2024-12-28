@@ -130,6 +130,11 @@ void setup() {
   while (true) {
     if (gyroscope.begin()){break;}else{if(trytimes>0){trytimes--;}else{break;}}
   }
+  trytimes = 100;
+  while (true) {
+    if (pcf.begin()){break;}else{if(trytimes>0){trytimes--;}else{break;}}
+  }
+
 
   lcd.setRotation(1);
   lcd.fillScreen(0);
