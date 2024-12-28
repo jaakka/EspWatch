@@ -3,19 +3,21 @@
 
 #include "heartrate.h"
 #include "gyroscope.h"
+#include "pcf.h"
 
 class DEBUG {
 
 public:
-    DEBUG(HEARTRATE& hr, GYROSCOPE& gyro);
+    DEBUG(HEARTRATE& hr, GYROSCOPE& gyro, PCF& pcf);
 
     void printMenu();
     void loop();
 
 
 private:
-    HEARTRATE& heartRate;
+    HEARTRATE& heartrate;
     GYROSCOPE& gyroscope;
+    PCF& pcf;
 
     int action;
     int mode;
