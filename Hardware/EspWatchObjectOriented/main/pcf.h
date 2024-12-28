@@ -13,6 +13,16 @@ public:
 
     void DAC_enabled(bool state);
 
+
+    // Quick functions for the light sensor
+
+    void enableLightSensor();
+    void disableLightSensor();
+
+    uint8_t readHallSensor1();
+    uint8_t readHallSensor2();
+    uint8_t readLightSensor();
+
 private:
 
     Adafruit_PCF8591 obj;
