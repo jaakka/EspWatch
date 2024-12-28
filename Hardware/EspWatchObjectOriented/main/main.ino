@@ -312,16 +312,17 @@ void loop() {
 
 void drawNotifyBtn(int x, int y, bool btnState, String txt) {
     // btn background
-    frame.fillSmoothCircle(x, y, 28, TFT_WHITE, TFT_WHITE);
     frame.setTextSize(1);
     frame.setTextColor(TFT_BLACK);
     if(btnState) {
+      frame.fillSmoothCircle(x, y, 28, TFT_WHITE, TFT_WHITE);
       frame.fillSmoothCircle(x, y, 26, TFT_GREEN, TFT_GREEN);
-       frame.drawCentreString(txt, x, y - 8, 2);
+      frame.drawCentreString(txt, x, y - 8, 2);
       frame.drawCentreString("Enabled", x, y + 8, 2);
     } else {
-      frame.fillSmoothCircle(x, y, 26, TFT_RED, TFT_RED);
-       frame.drawCentreString(txt, x, y - 8, 2);
+      frame.fillSmoothCircle(x, y, 26, TFT_WHITE, TFT_WHITE);
+      frame.fillSmoothCircle(x, y, 24, TFT_RED, TFT_RED);
+      frame.drawCentreString(txt, x, y - 8, 2);
       frame.drawCentreString("Disabled", x, y + 8, 2);
     }
 }
@@ -374,18 +375,20 @@ void handleNotifyView() {
         int btn_radius = 15;
 
         bool btn1_vertical = touch.x > ((SCREEN_WIDTH/2) - btn_radius) && touch.x < ((SCREEN_WIDTH/2) + btn_radius);
-        bool btn1_horizontal = touch.y > ((notifyview_y+13) - btn_radius) && touch.y < ((notifyview_y+13) + btn_radius);
+        bool btn1_horizontal = touch.y > ((90+13) - btn_radius) && touch.y < ((90+13) + btn_radius);
         bool btn1 = btn1_vertical && btn1_horizontal;
 
         bool btn2_vertical = touch.x > (((SCREEN_WIDTH/2)-63) - btn_radius) && touch.x < (((SCREEN_WIDTH/2)-63) + btn_radius);
-        bool btn2_horizontal = touch.y > ((notifyview_y+1) - btn_radius) && touch.y < ((notifyview_y+1) + btn_radius);
+        bool btn2_horizontal = touch.y > ((90+1) - btn_radius) && touch.y < ((90+1) + btn_radius);
         bool btn2 = btn2_vertical && btn2_horizontal;
 
         bool btn3_vertical = touch.x > (((SCREEN_WIDTH/2)+63) - btn_radius) && touch.x < (((SCREEN_WIDTH/2)+63) + btn_radius);
-        bool btn3_horizontal = touch.y > ((notifyview_y+1) - btn_radius) && touch.y < ((notifyview_y+1) + btn_radius);
+        bool btn3_horizontal = touch.y > ((90+1) - btn_radius) && touch.y < ((90+1) + btn_radius);
         bool btn3 = btn3_vertical && btn3_horizontal;
 
-        if(presstime < 300)
+        bool can_use = abs(notifyview_y - 90) <3;
+
+        if(presstime < 300 && can_use)
         {
           if(btn1) {
             pulseenabled = !pulseenabled;
