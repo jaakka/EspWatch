@@ -55,6 +55,7 @@ float voltage = 0;
 constexpr float voltageMultiplier = (3.3 / 4095.0) * 3.32;     // 3.32 is compensation for the voltage divider
 int homescreen_theme = 1;
 int notifyview_y = 0;
+int notifystart_y = 0;
 bool notifyopen = false;
 bool notifyarefullopen = false;
 
@@ -299,10 +300,17 @@ if(notifyview_y != 0) {
     frame.setTextColor(TFT_WHITE);
     frame.setTextSize(2);
     frame.drawCentreString("No notifications", SCREEN_WIDTH/2, notifyview_y - (SCREEN_HEIGHT/2 + 30), 2);
-    }else{
+    }
+    if(notifyview_y < SCREEN_HEIGHT)
+    {
       frame.fillSmoothCircle(SCREEN_WIDTH/2, notifyview_y, 28, TFT_WHITE, TFT_WHITE);
+      frame.fillSmoothCircle(SCREEN_WIDTH/2, notifyview_y, 26, TFT_BLACK, TFT_BLACK);
+
       frame.fillSmoothCircle(SCREEN_WIDTH/2-63, notifyview_y-12, 28, TFT_WHITE, TFT_WHITE);
+      frame.fillSmoothCircle(SCREEN_WIDTH/2-63, notifyview_y-12, 26, TFT_BLACK, TFT_BLACK);
+      
       frame.fillSmoothCircle(SCREEN_WIDTH/2+63, notifyview_y-12, 28, TFT_WHITE, TFT_WHITE);
+      frame.fillSmoothCircle(SCREEN_WIDTH/2+63, notifyview_y-12, 26, TFT_BLACK, TFT_BLACK);
     }
   }
 }
@@ -313,20 +321,25 @@ void handleNotifyView() {
   if(touch.userTouch()) {
     if(!notifyopen) {
       if(touch.y < 40) {
-        notifyview_y = touch.y;
+        notifystart_y = touch.y;
         notifyopen = true;
       }
     } else { //notify open
-      notifyview_y = touch.y;
+      notifyview_y = touch.y - notifystart_y;
     }
   } else { // user released touch
-    if(notifyview_y < 80) {
-      if(notifyview_y < 40) {
-       notifyopen = false;
-       notifyarefullopen = false;
-      }else{
-       notifyopen = true;
-       notifyarefullopen = false;
+    if(notifyview_y < SCREEN_HEIGHT/2) {
+      if(!notifyarefullopen) {
+        if(notifyview_y < SCREEN_HEIGHT/4) {
+          notifyopen = false;
+          notifyarefullopen = false;
+        } else {
+          notifyopen = true;
+          notifyarefullopen = false;
+        }
+      } else {
+        notifyarefullopen = false;
+        notifyopen = false;
       }
     } else {
       notifyopen = true;
@@ -338,7 +351,7 @@ void handleNotifyView() {
       if(notifyarefullopen){
       if(notifyview_y < SCREEN_HEIGHT) {notifyview_y++;} 
       }else{
-        if(notifyview_y < 55) {notifyview_y++;} 
+        if(notifyview_y < 60) {notifyview_y++;} 
       }
     } 
     else {if(notifyview_y > 0) {notifyview_y--;} }
