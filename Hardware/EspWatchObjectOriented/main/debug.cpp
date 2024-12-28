@@ -1,8 +1,8 @@
 #include "debug.h"
 
 
-DEBUG::DEBUG(HEARTRATE& hr, GYROSCOPE& gyro) 
-        : heartRate(hr), gyroscope(gyro) 
+DEBUG::DEBUG(HEARTRATE& hr, GYROSCOPE& gyro, PCF& pcf) 
+        : heartrate(hr), gyroscope(gyro), pcf(pcf)
         {
         DEBUG::printMenu();
         }
@@ -14,30 +14,40 @@ void DEBUG::printMenu() {
     Serial.println("");
     Serial.println("");
 
+
     Serial.println("Enter a number to select an action:");
-    Serial.println("1: Test pulseDetected()");
-    Serial.println("2: Enable heart rate sensor");
-    Serial.println("3: Disable heart rate sensor");
-    Serial.println("4: Set heart rate mode");
-    Serial.println("5: Set heart rate sampling rate");
-    Serial.println("6: Set heart rate sample averaging");
-    Serial.println("7: Set heart rate LED current");
-    Serial.println("8: Set heart rate pulse width");
+    Serial.println("0: Print menu");
+    Serial.println("1: Begin heart rate sensor");
+    Serial.println("2: Test pulseDetected()");
+    Serial.println("3: Enable heart rate sensor");
+    Serial.println("4: Disable heart rate sensor");
+    Serial.println("5: Set heart rate mode");
+    Serial.println("6: Set heart rate sampling rate");
+    Serial.println("7: Set heart rate sample averaging");
+    Serial.println("8: Set heart rate LED current");
+    Serial.println("9: Set heart rate pulse width");
 
-    Serial.println("9: Begin gyroscope");
-    Serial.println("10: Run gyroscope loop");
+    Serial.println("10: Begin gyroscope");
+    Serial.println("11: Run gyroscope loop");
 
-    Serial.println("11: Read acceleration value");
-    Serial.println("12: Get acceleration sample rate");
-    Serial.println("13: Check if gyro acceleration is available");
+    Serial.println("12: Read acceleration value");
+    Serial.println("13: Get acceleration sample rate");
+    Serial.println("14: Check if gyro acceleration is available");
 
-    Serial.println("14: Read gyroscope value");
-    Serial.println("15: Get gyro sample rate");
-    Serial.println("16: Check if gyro is available");
+    Serial.println("15: Read gyroscope value");
+    Serial.println("16: Get gyro sample rate");
+    Serial.println("17: Check if gyro is available");
 
-    Serial.println("17: Read gyroscope temperature");
-    Serial.println("18: Get gyro temperature sample rate");
-    Serial.println("19: Check if gyro temperature is available");
+    Serial.println("18: Read gyroscope temperature");
+    Serial.println("19: Get gyro temperature sample rate");
+    Serial.println("20: Check if gyro temperature is available");
+
+    Serial.println("21: Begin PCF8591");
+    Serial.println("22: Read analog values from all PCF8591 pins, send anything to stop");
+    Serial.println("23: Write analog value to PCF8591 DAC");
+    Serial.println("24: Enable PCF8591 DAC");
+    Serial.println("25: Disable PCF8591 DAC");
+
 
     Serial.println("");
     Serial.println("");
@@ -49,18 +59,34 @@ void DEBUG::loop() {
         action = Serial.parseInt();
 
         switch (action) {
+            case 0:
+                DEBUG::printMenu();
+                break;
 
             case 1:
-                Serial.println("Testing pulseDetected() ...");
-                for (int i = 0; i < 1000; i++) {
-                    Serial.println(heartRate.pulseDetected());
+                if (heartrate.begin()) 
+                {
+                    Serial.println("Heart rate sensor begun");
+                } 
+                else 
+                {
+                    Serial.println("Failed to begin heart rate sensor");
                 }
                 DEBUG::printMenu();
                 break;
 
 
             case 2:
-                if (heartRate.enableSensor()) 
+                Serial.println("Testing pulseDetected() ...");
+                for (int i = 0; i < 1000; i++) {
+                    Serial.println(heartrate.pulseDetected());
+                }
+                DEBUG::printMenu();
+                break;
+
+
+            case 3:
+                if (heartrate.enableSensor()) 
                 {
                     Serial.println("Heart rate sensor enabled");
                 } 
@@ -72,8 +98,8 @@ void DEBUG::loop() {
                 break;
 
 
-            case 3:
-                if (heartRate.disableSensor()) 
+            case 4:
+                if (heartrate.disableSensor()) 
                 {
                     Serial.println("Heart rate sensor disabled");
                 }
@@ -85,14 +111,14 @@ void DEBUG::loop() {
                 break;
 
 
-            case 4:
+            case 5:
                 Serial.println("Enter 1 for heart rate only mode or 2 for SpO2 mode: ");
                 while (Serial.available() <= 0) {delay(100);}
                 
                 mode = Serial.parseInt();
                 if (mode == 1) 
                 {
-                    if (heartRate.setMode("MODE_HR_ONLY")) 
+                    if (heartrate.setMode("MODE_HR_ONLY")) 
                     {
                         Serial.println("Heart rate mode set");
                     } 
@@ -103,7 +129,7 @@ void DEBUG::loop() {
                 } 
                 else if (mode == 2) 
                 {
-                    if (heartRate.setMode("MODE_SPO2")) 
+                    if (heartrate.setMode("MODE_SPO2")) 
                     {
                         Serial.println("Heart rate mode set");
                     } 
@@ -120,13 +146,13 @@ void DEBUG::loop() {
                 break;
 
 
-            case 5:
+            case 6:
                 Serial.println("Enter a sampling rate (50, 100, 200, 400, 800, 1000, 1600, 3200): ");
                 while (Serial.available() <= 0) {delay(100);}
 
                 samplingRate = Serial.parseInt();
 
-                if (heartRate.setSamplingRate(samplingRate)) 
+                if (heartrate.setSamplingRate(samplingRate)) 
                 {
                     Serial.println("Heart rate sampling rate set");
                 } 
@@ -138,13 +164,13 @@ void DEBUG::loop() {
                 break;
 
 
-            case 6:
+            case 7:
                 Serial.println("Enter a sample averaging (0, 2, 4, 8, 16, 32): ");
                 while (Serial.available() <= 0) {delay(100);}
 
                 sampleAveraging = Serial.parseInt();
 
-                if (heartRate.setSampleAveraging(sampleAveraging)) 
+                if (heartrate.setSampleAveraging(sampleAveraging)) 
                 {
                     Serial.println("Heart rate sample averaging set");
                 } 
@@ -156,7 +182,7 @@ void DEBUG::loop() {
                 break;
 
 
-            case 7:
+            case 8:
                 Serial.println("Enter 1 for red LED or 2 for IR LED: ");
                 while (Serial.available() <= 0) {delay(100);}
 
@@ -167,7 +193,7 @@ void DEBUG::loop() {
                     while (Serial.available() <= 0) {delay(100);}
 
                     current = Serial.parseFloat();
-                    if (heartRate.setLedCurrent("LED_RED", current)) 
+                    if (heartrate.setLedCurrent("LED_RED", current)) 
                     {
                         Serial.println("Heart rate LED current for red set");
                     } 
@@ -182,7 +208,7 @@ void DEBUG::loop() {
                     while (Serial.available() <= 0) {delay(100);}
 
                     current = Serial.parseFloat();
-                    if (heartRate.setLedCurrent("LED_IR", current)) 
+                    if (heartrate.setLedCurrent("LED_IR", current)) 
                     {
                         Serial.println("Heart rate LED current for IR set");
                     }
@@ -199,12 +225,12 @@ void DEBUG::loop() {
                 break;
 
 
-            case 8:
+            case 9:
                 Serial.println("Enter a pulse width (69, 118, 215, 411): ");
                 while (Serial.available() <= 0) {delay(100);}
 
                 pulseWidth = Serial.parseInt();
-                if (heartRate.setPulseWidth(pulseWidth)) 
+                if (heartrate.setPulseWidth(pulseWidth)) 
                 {
                     Serial.println("Heart rate pulse width set");
                 } 
@@ -216,7 +242,7 @@ void DEBUG::loop() {
                 break;
 
 
-            case 9:
+            case 10:
                 if (gyroscope.begin()) 
                 {
                     Serial.println("Gyroscope begun");
@@ -229,14 +255,14 @@ void DEBUG::loop() {
                 break;
 
 
-            case 10:
+            case 11:
                 gyroscope.loop();
 
                 DEBUG::printMenu();
                 break;
 
 
-            case 11:
+            case 12:
                 if (gyroscope.readAcceleration(x_Acc, y_Acc, z_Acc)) 
                 {
                     Serial.print("Acceleration x: ");
@@ -254,7 +280,7 @@ void DEBUG::loop() {
                 break;
 
 
-            case 12:
+            case 13:
                 Serial.print("Acceleration sample rate: ");
                 Serial.println(gyroscope.getAccelerationSampleRate());
 
@@ -262,7 +288,7 @@ void DEBUG::loop() {
                 break;
 
 
-            case 13:
+            case 14:
                 if (gyroscope.accelerationAvailable()) 
                 {
                     Serial.println("Acceleration available");
@@ -275,7 +301,7 @@ void DEBUG::loop() {
                 break;
 
 
-            case 14:
+            case 15:
                 if (gyroscope.readGyroscope(x_Gyro, y_Gyro, z_Gyro)) 
                 {
                     Serial.print("Gyroscope x: ");
@@ -293,7 +319,7 @@ void DEBUG::loop() {
                 break;
 
 
-            case 15:
+            case 16:
                 Serial.print("Gyroscope sample rate: ");
                 Serial.println(gyroscope.getGyroscopeSampleRate());
 
@@ -301,7 +327,7 @@ void DEBUG::loop() {
                 break;
 
 
-            case 16:
+            case 17:
                 if (gyroscope.gyroscopeAvailable()) 
                 {
                     Serial.println("Gyroscope available");
@@ -314,7 +340,7 @@ void DEBUG::loop() {
                 break;
 
 
-            case 17:
+            case 18:
                 if (gyroscope.readTemperature(temperature)) {
                     Serial.print("Temperature: ");
                     Serial.print(temperature);
@@ -326,7 +352,7 @@ void DEBUG::loop() {
                 break;
 
 
-            case 18:
+            case 19:
                 Serial.print("Temperature sample rate: ");
                 Serial.println(gyroscope.getTemperatureSampleRate());
 
@@ -334,7 +360,7 @@ void DEBUG::loop() {
                 break;
 
 
-            case 19:
+            case 20:
                 if (gyroscope.temperatureAvailable()) 
                 {
                     Serial.println("Temperature available");
@@ -343,6 +369,61 @@ void DEBUG::loop() {
                 {
                     Serial.println("Temperature not available");
                 }
+                DEBUG::printMenu();
+                break;
+
+
+            case 21:
+                if (pcf.begin()) 
+                {
+                    Serial.println("PCF8591 begun");
+                } 
+                else 
+                {
+                    Serial.println("Failed to begin PCF8591");
+                }
+                DEBUG::printMenu();
+                break;
+
+
+            case 22:
+                while (Serial.available() <= 0) {
+                    Serial.print("Analog values: ");
+                    for (uint8_t i = 0; i < 4; i++) {
+                        Serial.print(pcf.analogRead(i));
+                        Serial.print(" ");
+                    }
+                    Serial.println("");
+                    delay(200);
+                }
+                // Clear buffer since the input is only used to stop the loop
+                while (Serial.available() > 0) {
+                    Serial.read();
+                }
+                DEBUG::printMenu();
+                break;
+
+            
+            case 23:
+                Serial.println("Enter a value to write to the DAC (0-255): ");
+                while (Serial.available() <= 0) {delay(100);}
+
+                pcf.analogWrite(Serial.parseInt());
+                
+
+                DEBUG::printMenu();
+                break;
+
+
+            case 24:
+                pcf.DAC_enabled(true);
+                Serial.println("PCF8591 DAC enabled");
+                DEBUG::printMenu();
+                break;
+
+            case 25:
+                pcf.DAC_enabled(false);
+                Serial.println("PCF8591 DAC disabled");
                 DEBUG::printMenu();
                 break;
 

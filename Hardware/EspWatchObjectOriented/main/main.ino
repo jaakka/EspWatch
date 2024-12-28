@@ -3,6 +3,7 @@
 #include "touch.h"
 #include "heartrate.h"
 #include "gyroscope.h"
+#include "pcf.h"
 #include "debug.h"
 
 #define SCREEN_WIDTH 240
@@ -21,7 +22,8 @@ TFT_eSprite frame = TFT_eSprite(&lcd);
 TOUCH touch;
 HEARTRATE heartrate;
 GYROSCOPE gyroscope;
-DEBUG debug(heartrate, gyroscope);
+PCF pcf;
+DEBUG debug(heartrate, gyroscope, pcf);
 int pulseAnim = 14;
 
 
