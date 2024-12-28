@@ -353,7 +353,7 @@ void handleNotifyView() {
       if(notifyarefullopen){
       if(notifyview_y < SCREEN_HEIGHT) {notifyview_y++;} 
       }else{
-        if(notifyview_y < 60) {notifyview_y++;} 
+        if(notifyview_y < 65) {notifyview_y++;} else {if(notifyview_y > 65) {notifyview_y--;}}
       }
     } 
     else {if(notifyview_y > 0) {notifyview_y--;} }
