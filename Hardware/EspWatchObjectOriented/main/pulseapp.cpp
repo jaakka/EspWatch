@@ -15,10 +15,14 @@ void PulseApp::handleApplicationBackground() {
 
 }
 
-void PulseApp::drawApplication() {
+void PulseApp::drawApplication(float scale) {
 
 }
 
-void PulseApp::drawApplicationIcon() {
+void PulseApp::drawApplicationIcon(float scale) {
   
+}
+
+bool PulseApp::areAvailableOnMenu() {
+  return true;
 }

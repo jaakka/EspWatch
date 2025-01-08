@@ -8,8 +8,9 @@ public:
     void init() override;      
     void handleApplication() override;        
     void handleApplicationBackground() override;        
-    void drawApplication() override; 
-    void drawApplicationIcon() override; 
+    void drawApplication(float scale) override; 
+    void drawApplicationIcon(float scale) override; 
+    bool areAvailableOnMenu() override;
 };
 
 #endif 

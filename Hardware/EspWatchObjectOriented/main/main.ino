@@ -13,6 +13,7 @@
 #include "app.h"
 #include "pulseapp.h"
 #include "homeapp.h"
+#include "menuapp.h"
 
 #define SCREEN_WIDTH  240  // Screen width
 #define SCREEN_HEIGHT 240  // Screen height
@@ -25,7 +26,7 @@
 #define SCREEN_BEFORE_SLEEP_BRIGHTNESS 10  // 0 - 100% 
 #define SCREEN_WAKE_BRIGHTNESS 100  // 0 - 100%
 
-#define DELAY_TO_DIM 5000  // Delay to sleep in ms
+#define DELAY_TO_DIM 5000     // Delay to sleep in ms
 #define DELAY_TO_SLEEP 10000  // Delay to full sleep in ms
 
 #define TRY_TIMES_FOR_DEVICES 100   // How many times try to start devices
@@ -38,9 +39,10 @@ GYROSCOPE gyroscope;                    // Gyroscope in daughterboard
 PCF pcf;                                // Pcf in daughterboard, connected to light and hall sensors.
 DEBUG debug(heartrate, gyroscope, pcf);
 
-// Create before start, application instances
+// Application handling
 #define APP_COUNT 3
 App* apps[APP_COUNT] = {new MenuApp(), new HomeApp(), new PulseApp()};
+int runningApp = 1; // HomeApp is the default start app
 
 // Global variables 
 float batteryVoltage = 0;
@@ -65,7 +67,6 @@ void tryStartModules() {
     } 
   }
 }
-
 
 void initPins() {
   //attachInterrupt(digitalPinToInterrupt(GyroIntPin), gyroInterrupt, RISING);
@@ -115,6 +116,18 @@ void LcdBrightnessSmoothController() {
     } 
   }
 } 
+
+void handleApplications() {
+   for (int i = 0; i < APP_COUNT; i++) {
+    if(i == runningApp) {
+      // Handle open application
+      apps[i]->handleApplication();
+      apps[i]->drawApplication();
+    } else {
+      // Handle background applications
+      apps[i]->handleApplicationBackground();
+    }
+}
 
 void onBoot() {
   // this is executed once when the clock boots up

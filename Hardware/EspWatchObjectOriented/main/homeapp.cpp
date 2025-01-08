@@ -15,10 +15,14 @@ void HomeApp::handleApplicationBackground() {
 
 }
 
-void HomeApp::drawApplication() {
+void HomeApp::drawApplication(float scale) {
 
 }
 
-void HomeApp::drawApplicationIcon() {
+void HomeApp::drawApplicationIcon(float scale) {
   
+}
+
+bool HomeApp::areAvailableOnMenu() {
+  return true;
 }
