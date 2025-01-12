@@ -15,8 +15,8 @@
 #include "homeapp.h"
 #include "menuapp.h"
 
-#define SCREEN_WIDTH  240  // Screen width
-#define SCREEN_HEIGHT 240  // Screen height
+const int SCREEN_WIDTH = 240;  // Screen width
+const int SCREEN_HEIGHT = 240;  // Screen height
 
 #define GyroIntPin      23 // Gyroscope interrupt pin
 //#define TouchIntPin       19 // Lcd interrupt pin
@@ -40,9 +40,9 @@ PCF pcf;                                // Pcf in daughterboard, connected to li
 DEBUG debug(heartrate, gyroscope, pcf);
 
 // Application handling
-#define APP_COUNT 3
+const int APP_COUNT = 3;
 App* apps[APP_COUNT] = {new MenuApp(), new HomeApp(), new PulseApp()};
-int runningApp = 1; // HomeApp is the default start app
+int runningApp = 0; // HomeApp is the default start app
 
 // Global variables 
 float batteryVoltage = 0;
@@ -76,7 +76,7 @@ void initPins() {
 }
 
 void initValues() {
-  setTime(0, 0, 00, 1, 1, 2025);
+  setTime(0, 15, 00, 1, 1, 2025);
 }
 
 void initScreen() {
@@ -127,6 +127,7 @@ void handleApplications() {
       // Handle background applications
       apps[i]->handleApplicationBackground();
     }
+  }
 }
 
 void onBoot() {
@@ -137,12 +138,12 @@ void onBoot() {
   initScreen();
   tryStartModules();
   initApplications();
-  gpio_wakeup_enable(GPIO_NUM_19, GPIO_INTR_LOW_LEVEL);       // Lisätään herätys touch int pinnistä
-  gpio_wakeup_enable(GPIO_NUM_23, GPIO_INTR_HIGH_LEVEL);      // Lisätään herätys gyro int pinnistä
-  esp_sleep_enable_gpio_wakeup();
-  Serial.println("lepotilaan siirtyminen");
+  //gpio_wakeup_enable(GPIO_NUM_19, GPIO_INTR_LOW_LEVEL);       // Lisätään herätys touch int pinnistä
+  //gpio_wakeup_enable(GPIO_NUM_23, GPIO_INTR_HIGH_LEVEL);      // Lisätään herätys gyro int pinnistä
+  //esp_sleep_enable_gpio_wakeup();
+  //Serial.println("lepotilaan siirtyminen");
   delay(1000);
-  esp_light_sleep_start();
+  //esp_light_sleep_start();
 }
 
 void allTimeLoop() { 
@@ -151,8 +152,14 @@ void allTimeLoop() {
   LcdBrightnessSmoothController();
 }
 
+void publishFrame() {
+  frame.pushSprite(0,0);
+}
+
 void onWakeLoop() {
   // this is only performed when the watch is awake
+  handleApplications();
+  publishFrame();
 }
 
 void onSleepLoop() {
