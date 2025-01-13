@@ -13,11 +13,11 @@ void MenuApp::init() {
   near_app_y = 0;
   touch_start_x = 0;
   touch_start_y = 0;
-  openApplicationScale = 0;
+  application_open_scale = 0;
 }
 
 void MenuApp::handleApplication() {
-  if (touch.userTouch() && openApplicationScale < 1.5) {
+  if (touch.userTouch() && application_open_scale < 1.5) {
     last_touch = millis();
     if (!is_dragging) {
       touch_start_x = touch.x;
@@ -42,13 +42,13 @@ void MenuApp::handleApplication() {
       }*/
       last_release = millis();
       //selectPosX = menu_x, selectPosY = menu_ypos;
-      getNearestApplication(&near_app_x, &near_app_y, x_offset, y_offset, 2.8);
+      //getNearestApplication(&near_app_x, &near_app_y, x_offset, y_offset, 2.8);
     }
     is_dragging = false;
   }
 
   if (!is_dragging && last_touch + 100 < millis()) { //SmoothAjo6000
-    smoothMove(&menu_xpos,&menu_ypos,near_app_x,near_app_y);
+    smoothMove(menu_xpos,menu_ypos,near_app_x,near_app_y);
   }
 }
 
@@ -84,7 +84,10 @@ void MenuApp::drawApplication(int x, int y, float scale) {
   float middle_y = menu_ypos + y + scaled_height/2;
   float middle_x = menu_xpos + x + scaled_width/2;
 
+  float application_scaled_width = ((float)SCREEN_WIDTH/10) * 2.8;
+
   //Middle application
+  //frame.fillCircle(middle_x, middle_y, application_scaled_width/2 + (scale*0.2), rgb(255,255,255));
   apps[1]->drawApplicationIcon(middle_x,middle_y); // 0 is menu app, 1 is clock app hardcoded.
 
   //Center circle applications
@@ -95,13 +98,11 @@ void MenuApp::drawApplication(int x, int y, float scale) {
     float y = middle_y + radius * sin(angle);
     int applicationId = i + 2;
 
-    float scaled_width = ((float)SCREEN_WIDTH/10) * 2.8;
-
     if(checkApplicationId(applicationId) != -1) {
       apps[applicationId]->drawApplicationIcon(x,y);
     } 
     else {
-      frame.fillCircle(x, y, scaled_width/2, rgb(80,0,0));
+      frame.fillCircle(x, y, application_scaled_width/2, rgb(120,0,0));
     }
   }
 
@@ -119,7 +120,7 @@ void MenuApp::drawApplication(int x, int y, float scale) {
       apps[applicationId]->drawApplicationIcon(x,y);
     } 
     else {
-      frame.fillCircle(x, y, scaled_width/2, rgb(80,0,0));
+      frame.fillCircle(x, y, scaled_width/2, rgb(120,0,0));
     }
   }
 
@@ -129,14 +130,14 @@ void MenuApp::drawApplication(int x, int y, float scale) {
   }
 }
 
-void MenuApp::getNearestApplication(float *near_app_x, float *near_app_y, float x_offset, float y_offset, float scale) {
+void MenuApp::getNearestApplication(float &near_app_x, float &near_app_y, float x_offset, float y_offset, float scale) {
 
 }
 
-void MenuApp::smoothMove(float *current_x, float *current_y, float target_x, float target_y) {
+void MenuApp::smoothMove(float &current_x, float &current_y, float &target_x, float &target_y) {
     float ratio, xspeed, yspeed, speed = 5;
-    float xdistance = abs((target_x - *current_x)); 
-    float ydistance = abs((target_y - *current_y));
+    float xdistance = abs((target_x - current_x)); 
+    float ydistance = abs((target_y - current_y));
 
     if (xdistance > ydistance) {
         ratio = (float)ydistance / xdistance;
@@ -152,34 +153,34 @@ void MenuApp::smoothMove(float *current_x, float *current_y, float target_x, flo
     }
     for (int i = 0; i < speed; i++) {
 
-        if (*current_x != target_xpos) {
+        if (current_x != target_xpos) {
 
-            if (*current_x > target_xpos) {
-              *current_x -= xspeed;
-              if (*current_x < target_xpos) {
-                *current_x = target_xpos;
+            if (current_x > target_xpos) {
+              current_x -= xspeed;
+              if (current_x < target_xpos) {
+                current_x = target_xpos;
               }
             }
-            else if (*current_x < target_xpos) {
-              *current_x += xspeed;
-              if (*current_x > target_xpos) {
-                *current_x = target_xpos;
+            else if (current_x < target_xpos) {
+              current_x += xspeed;
+              if (current_x > target_xpos) {
+                current_x = target_xpos;
               }
             }
             
         }
 
-        if (*current_y != target_ypos) {
+        if (current_y != target_ypos) {
 
-            if (*current_y > target_ypos) {
-                *current_y -= yspeed;
-                if (*current_y < target_ypos) {
-                  *current_y = target_ypos;
+            if (current_y > target_ypos) {
+                current_y -= yspeed;
+                if (current_y < target_ypos) {
+                  current_y = target_ypos;
                 }
-            } else if (*current_y < target_ypos) {
-                *current_y += yspeed;
-                if (*current_y > target_ypos) {
-                  *current_y = target_ypos;
+            } else if (current_y < target_ypos) {
+                current_y += yspeed;
+                if (current_y > target_ypos) {
+                  current_y = target_ypos;
                 }
             }
 

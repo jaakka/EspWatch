@@ -51,6 +51,9 @@ bool watchAwake = true;
 bool watchReadyToSleep = false;
 
 void tryStartModules() {
+
+  // DO WHILE ?
+
   for (uint8_t i = 0; i < TRY_TIMES_FOR_DEVICES; i++) { 
     if(heartrate.begin()) {
       break;

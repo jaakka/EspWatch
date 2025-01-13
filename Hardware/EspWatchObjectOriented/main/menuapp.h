@@ -23,13 +23,13 @@ private:
     float near_app_y;
     float touch_start_x;
     float touch_start_y;
-    bool isDragging;
-    float openApplicationScale;
+    bool is_dragging;
+    float application_open_scale;
     unsigned long last_touch;
     unsigned long last_release;
     int checkApplicationId(int id);
-    void smoothMove(float *current_x, float *current_y, float target_x, float target_y);
-    void getNearestApplication(float *near_app_x, float *near_app_y, float x_offset, float y_offset, float scale);
+    void smoothMove(float &current_x, float &current_y, float &target_x, float &target_y);
+    void getNearestApplication(float &near_app_x, float &near_app_y, float x_offset, float y_offset, float scale);
 };
 
 #endif 
