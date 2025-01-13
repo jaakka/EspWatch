@@ -158,6 +158,7 @@ void publishFrame() {
 
 void onWakeLoop() {
   // this is only performed when the watch is awake
+  touch.loop();
   handleApplications();
   publishFrame();
 }

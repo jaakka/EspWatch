@@ -15,13 +15,21 @@ public:
     void drawApplicationIcon(int x, int y, float scale) override; 
     bool areAvailableOnMenu() override;
 private:
-    float menu_xpos = 0;
-    float menu_ypos = 0;
-    float target_xpos = 0;
-    float target_ypos = 0;
-    bool isDragging = false;
+    float menu_xpos;
+    float menu_ypos;
+    float target_xpos;
+    float target_ypos;
+    float near_app_x;
+    float near_app_y;
+    float touch_start_x;
+    float touch_start_y;
+    bool isDragging;
+    float openApplicationScale;
+    unsigned long last_touch;
+    unsigned long last_release;
     int checkApplicationId(int id);
-    void smoothMove(int* current_x, int* current_y, int target_x, int target_y);
+    void smoothMove(float *current_x, float *current_y, float target_x, float target_y);
+    void getNearestApplication(float *near_app_x, float *near_app_y, float x_offset, float y_offset, float scale);
 };
 
 #endif 

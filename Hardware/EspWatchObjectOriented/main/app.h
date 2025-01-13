@@ -2,9 +2,11 @@
 #define APP_H
 
 #include <TFT_eSPI.h>
+#include "touch.h"
 #include "utils.h"
 
 extern TFT_eSprite frame;
+extern TOUCH touch;
 extern const int SCREEN_WIDTH;
 extern const int SCREEN_HEIGHT;
 
