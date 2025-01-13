@@ -6,7 +6,7 @@ void MenuApp::init() {
   menu_ypos = 0;
   target_xpos = 0;
   target_ypos = 0;
-  isDragging = false;
+  is_dragging = false;
   last_touch = millis(); 
   last_release = millis();
   near_app_x = 0;
@@ -19,10 +19,10 @@ void MenuApp::init() {
 void MenuApp::handleApplication() {
   if (touch.userTouch() && openApplicationScale < 1.5) {
     last_touch = millis();
-    if (!isDragging) {
+    if (!is_dragging) {
       touch_start_x = touch.x;
       touch_start_y = touch.y;
-      isDragging = true;
+      is_dragging = true;
     } else {
       // Relative movement
       menu_xpos += (touch.x - touch_start_x);
@@ -33,7 +33,7 @@ void MenuApp::handleApplication() {
     }
   } else {
     //User has released the touch
-    if(isDragging)
+    if(is_dragging)
     {
      /* if(last_release + 1000 > millis() && abs(menu_x-selectPosX)<5 && abs(menu_y-selectPosY)<5 && (selectedApplication == 4 || selectedApplication == 5))
       {
@@ -44,10 +44,10 @@ void MenuApp::handleApplication() {
       //selectPosX = menu_x, selectPosY = menu_ypos;
       getNearestApplication(&near_app_x, &near_app_y, x_offset, y_offset, 2.8);
     }
-    isDragging = false;
+    is_dragging = false;
   }
 
-  if (!isDragging && last_touch + 100 < millis()) { //SmoothAjo6000
+  if (!is_dragging && last_touch + 100 < millis()) { //SmoothAjo6000
     smoothMove(&menu_xpos,&menu_ypos,near_app_x,near_app_y);
   }
 }
@@ -75,14 +75,14 @@ void MenuApp::drawApplication(int x, int y, float scale) {
   float scaled_width = ((float)SCREEN_WIDTH/10) * scale;
   float scaled_height = ((float)SCREEN_HEIGHT/10) * scale;
 
-  float middle_x = x + scaled_width/2;
-  float middle_y = y + scaled_height/2;
+  float abs_middle_x = x + scaled_width/2;
+  float abs_middle_y = y + scaled_height/2;
 
   // Draw background
-  frame.fillCircle(middle_x, middle_y, scaled_width/2, rgb(150, 0, 0));
+  frame.fillCircle(abs_middle_x, abs_middle_y, scaled_width/2, rgb(150, 0, 0));
 
-  middle_y = menu_ypos + y + scaled_height/2;
-  middle_x = menu_xpos + x + scaled_width/2;
+  float middle_y = menu_ypos + y + scaled_height/2;
+  float middle_x = menu_xpos + x + scaled_width/2;
 
   //Middle application
   apps[1]->drawApplicationIcon(middle_x,middle_y); // 0 is menu app, 1 is clock app hardcoded.
@@ -121,6 +121,11 @@ void MenuApp::drawApplication(int x, int y, float scale) {
     else {
       frame.fillCircle(x, y, scaled_width/2, rgb(80,0,0));
     }
+  }
+
+  // Draw cursor
+  if (is_dragging) {
+    frame.fillCircle(abs_middle_x, abs_middle_y, scale, rgb(255, 255, 255));
   }
 }
 
