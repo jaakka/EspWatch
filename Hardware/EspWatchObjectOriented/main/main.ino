@@ -51,24 +51,30 @@ bool watchAwake = true;
 bool watchReadyToSleep = false;
 
 void tryStartModules() {
-
-  // DO WHILE ?
-
-  for (uint8_t i = 0; i < TRY_TIMES_FOR_DEVICES; i++) { 
+  
+  uint8_t i = 0;
+  do {
     if(heartrate.begin()) {
       break;
     } 
-  }
-  for (uint8_t i = 0; i < TRY_TIMES_FOR_DEVICES; i++) { 
+    i++;
+  } while (i < TRY_TIMES_FOR_DEVICES);
+
+  i = 0;
+  do {
     if(gyroscope.begin()) {
       break;
     } 
-  }
-  for (uint8_t i = 0; i < TRY_TIMES_FOR_DEVICES; i++) { 
+    i++;
+  } while (i < TRY_TIMES_FOR_DEVICES);
+
+  i = 0;
+  do {
     if(pcf.begin()) {
       break;
     } 
-  }
+    i++;
+  } while (i < TRY_TIMES_FOR_DEVICES);
 }
 
 void initPins() {
