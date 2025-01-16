@@ -51,7 +51,7 @@ bool watchAwake = true;
 bool watchReadyToSleep = false;
 
 void tryStartModules() {
-  
+
   uint8_t i = 0;
   do {
     if(heartrate.begin()) {

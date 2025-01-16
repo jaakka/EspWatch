@@ -15,6 +15,9 @@ public:
     void drawApplicationIcon(int x, int y, float scale) override; 
     bool areAvailableOnMenu() override;
 private:
+    float draw_x;
+    float draw_y;
+    float draw_scale;
     float menu_xpos;
     float menu_ypos;
     float target_xpos;
@@ -27,9 +30,10 @@ private:
     float application_open_scale;
     unsigned long last_touch;
     unsigned long last_release;
+    int near_app_id;
     int checkApplicationId(int id);
     void smoothMove(float &current_x, float &current_y, float &target_x, float &target_y);
-    void getNearestApplication(float &near_app_x, float &near_app_y, float x_offset, float y_offset, float scale);
+    //void getNearestApplication(const float &current_x, const float &current_y ,float &application_x, float &application_y, int &application_id);
 };
 
 #endif 

@@ -2,6 +2,9 @@
 
 void MenuApp::init() {
   // Init values
+  draw_x = 0;
+  draw_y = 0;
+  draw_scale = 0;
   menu_xpos = 0;
   menu_ypos = 0;
   target_xpos = 0;
@@ -11,6 +14,7 @@ void MenuApp::init() {
   last_release = millis();
   near_app_x = 0;
   near_app_y = 0;
+  near_app_id = 0;
   touch_start_x = 0;
   touch_start_y = 0;
   application_open_scale = 0;
@@ -41,14 +45,13 @@ void MenuApp::handleApplication() {
         openApp = true;
       }*/
       last_release = millis();
-      //selectPosX = menu_x, selectPosY = menu_ypos;
-      //getNearestApplication(&near_app_x, &near_app_y, x_offset, y_offset, 2.8);
+      //getNearestApplication(menu_xpos, menu_ypos, near_app_x, near_app_y, near_app_id);
     }
     is_dragging = false;
   }
 
   if (!is_dragging && last_touch + 100 < millis()) { //SmoothAjo6000
-    smoothMove(menu_xpos,menu_ypos,near_app_x,near_app_y);
+    smooth_move(menu_xpos,menu_ypos,near_app_x,near_app_y);
   }
 }
 
@@ -70,122 +73,117 @@ int MenuApp::checkApplicationId(int id) {
   }
 }
 
-void MenuApp::drawApplication(int x, int y, float scale) {
+void MenuApp::drawApplication(int x, int y, float scale) { //TODO: DRAW SELECTED APP LAST
+  draw_x = x;
+  draw_y = y;
+  draw_scale = scale;
 
-  float scaled_width = ((float)SCREEN_WIDTH/10) * scale;
-  float scaled_height = ((float)SCREEN_HEIGHT/10) * scale;
+  const float scaled_width = ((float)SCREEN_WIDTH/10) * scale;
+  const float scaled_height = ((float)SCREEN_HEIGHT/10) * scale;
 
-  float abs_middle_x = x + scaled_width/2;
-  float abs_middle_y = y + scaled_height/2;
+  const float abs_middle_x = x + scaled_width/2;
+  const float abs_middle_y = y + scaled_height/2;
 
   // Draw background
   frame.fillCircle(abs_middle_x, abs_middle_y, scaled_width/2, rgb(150, 0, 0));
 
-  float middle_y = menu_ypos + y + scaled_height/2;
-  float middle_x = menu_xpos + x + scaled_width/2;
+  const float middle_y = menu_ypos + y + scaled_height/2;
+  const float middle_x = menu_xpos + x + scaled_width/2;
 
-  float application_scaled_width = ((float)SCREEN_WIDTH/10) * 2.8;
+  const float application_scaled_width = ((float)SCREEN_WIDTH/10) * 2.8;
+  int application_id_var = 0;
 
   //Middle application
   //frame.fillCircle(middle_x, middle_y, application_scaled_width/2 + (scale*0.2), rgb(255,255,255));
-  apps[1]->drawApplicationIcon(middle_x,middle_y); // 0 is menu app, 1 is clock app hardcoded.
+  application_id_var++;
+
+  float shortest_distance = distance(x + abs_middle_x, y + abs_middle_y, middle_x, middle_y);
+  int cur_app_id = application_id_var;
+  float cur_app_x = x;
+  float cur_app_y = y;
+
+  float appscale = 3.5 - (shortest_distance/150)*1.3;
+  apps[application_id_var]->drawApplicationIcon(middle_x,middle_y,appscale); // 0 is menu app, 1 is clock app hardcoded.
+
+  frame.setTextColor(rgb(255,255,255));
+  frame.drawString(String(application_id_var), middle_x, middle_y, 2);
 
   //Center circle applications
   for (int i = 0; i < 6; i++) {
-    float angle = ((2 * PI * (i-1)) / 6) + 0.7853981634; // 45 c
-    int radius = 75;
-    float x = middle_x + radius * cos(angle);
-    float y = middle_y + radius * sin(angle);
-    int applicationId = i + 2;
-
-    if(checkApplicationId(applicationId) != -1) {
-      apps[applicationId]->drawApplicationIcon(x,y);
-    } 
-    else {
-      frame.fillCircle(x, y, application_scaled_width/2, rgb(120,0,0));
+    const float angle = ((2 * PI * (i-1)) / 6);// + 0.7853981634; // 45 c
+    const int radius = 80;
+    const float app_x = middle_x + radius * cos(angle);
+    const float app_y = middle_y + radius * sin(angle);
+    
+    application_id_var++;
+    
+    float dist = distance(x + abs_middle_x ,y + abs_middle_y, app_x, app_y);
+    if (shortest_distance > dist)
+    {
+      shortest_distance = dist;
+      cur_app_id = application_id_var;
+      //cur_app_x = app_x;
+      //cur_app_y = app_y;
     }
+
+    if(checkApplicationId(application_id_var) != -1) {
+        appscale = 3.5 - (dist/150)*1.3;
+        apps[application_id_var]->drawApplicationIcon(app_x,app_y,appscale);
+    } 
+    else 
+    {
+      appscale = 1.2 - (dist/150)*0.6;
+      frame.fillCircle(app_x, app_y, (application_scaled_width/2)*appscale, rgb(120,0,0));
+    }
+
+    frame.setTextColor(rgb(255,255,255));
+    frame.drawString(String(application_id_var), app_x, app_y, 2);
   }
 
   //Out circle applications
-  for (int i = 0; i < 10; i++) {
-    float angle = ((2 * PI * (i-1)) / 10);
-    int radius = 145;
-    float x = middle_x + radius * cos(angle);
-    float y = middle_y + radius * sin(angle);
-    int applicationId = i + 2;
+  for (int i = 0; i < 11; i++) {
+    const float angle = ((2 * PI * (i-1)) / 11);
+    const int radius = 152;
+    const float app_x = middle_x + radius * cos(angle);
+    const float app_y = middle_y + radius * sin(angle);
 
-    float scaled_width = ((float)SCREEN_WIDTH/10) * 2.8;
+    const float scaled_width = ((float)SCREEN_WIDTH/10); //* 2.8;
+    application_id_var++;
 
-    if(checkApplicationId(applicationId) != -1) {
-      apps[applicationId]->drawApplicationIcon(x,y);
-    } 
-    else {
-      frame.fillCircle(x, y, scaled_width/2, rgb(120,0,0));
+    float dist = distance(x + abs_middle_x ,y + abs_middle_y, app_x, app_y);
+    if (shortest_distance > dist)
+    {
+      shortest_distance = dist;
+      cur_app_id = application_id_var;
+     // near_app_x = x;
+      //near_app_y = y;
     }
+
+    if(checkApplicationId(application_id_var) != -1) {
+        appscale = 3.5 - (dist/150)*1.3;
+        apps[application_id_var]->drawApplicationIcon(app_x,app_y,appscale);
+    } 
+    else 
+    {
+      appscale = 1.2 - (dist/150)*0.6;
+      frame.fillCircle(app_x, app_y, (application_scaled_width/2)*appscale, rgb(120,0,0));
+    }
+
+    frame.setTextColor(rgb(255,255,255));
+    frame.drawString(String(application_id_var), app_x, app_y, 2);
   }
 
   // Draw cursor
   if (is_dragging) {
     frame.fillCircle(abs_middle_x, abs_middle_y, scale, rgb(255, 255, 255));
   }
-}
 
-void MenuApp::getNearestApplication(float &near_app_x, float &near_app_y, float x_offset, float y_offset, float scale) {
+  frame.fillCircle(near_app_x, near_app_y, scale, rgb(0, 255, 0));
 
-}
-
-void MenuApp::smoothMove(float &current_x, float &current_y, float &target_x, float &target_y) {
-    float ratio, xspeed, yspeed, speed = 5;
-    float xdistance = abs((target_x - current_x)); 
-    float ydistance = abs((target_y - current_y));
-
-    if (xdistance > ydistance) {
-        ratio = (float)ydistance / xdistance;
-        yspeed = (int)(speed * ratio);
-        xspeed = speed;
-    } else if (ydistance > xdistance) {
-        ratio = (float)xdistance / ydistance;
-        xspeed = (int)(speed * ratio);
-        yspeed = speed;
-    } else {
-        xspeed = speed;
-        yspeed = speed;
-    }
-    for (int i = 0; i < speed; i++) {
-
-        if (current_x != target_xpos) {
-
-            if (current_x > target_xpos) {
-              current_x -= xspeed;
-              if (current_x < target_xpos) {
-                current_x = target_xpos;
-              }
-            }
-            else if (current_x < target_xpos) {
-              current_x += xspeed;
-              if (current_x > target_xpos) {
-                current_x = target_xpos;
-              }
-            }
-            
-        }
-
-        if (current_y != target_ypos) {
-
-            if (current_y > target_ypos) {
-                current_y -= yspeed;
-                if (current_y < target_ypos) {
-                  current_y = target_ypos;
-                }
-            } else if (current_y < target_ypos) {
-                current_y += yspeed;
-                if (current_y > target_ypos) {
-                  current_y = target_ypos;
-                }
-            }
-
-        }
-    }
+  Serial.println(shortest_distance);
+  near_app_id = cur_app_id;
+  near_app_x = cur_app_x;
+  near_app_y = cur_app_y;
 }
 
 void MenuApp::drawApplicationIcon(int x, int y, float scale) {
