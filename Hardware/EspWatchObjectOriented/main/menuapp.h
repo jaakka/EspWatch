@@ -31,6 +31,7 @@ private:
     unsigned long last_touch;
     unsigned long last_release;
     int near_app_id;
+    bool debug_mode;
     int checkApplicationId(int id);
     void smoothMove(float &current_x, float &current_y, float &target_x, float &target_y);
     //void getNearestApplication(const float &current_x, const float &current_y ,float &application_x, float &application_y, int &application_id);

@@ -21,7 +21,7 @@ void HomeApp::drawApplication(int x, int y, float scale) {
   float middle_y = y + scaled_height/2;
 
   // Draw background
-  frame.fillCircle(middle_x, middle_y, scaled_width/2, rgb(255, 0, 0));
+  frame.fillCircle(middle_x, middle_y, scaled_width/2 + 2, rgb(255, 0, 0)); // +2 fixs ghost pixels
 
   // Draw side lines
   for(int i = 0; i < 12; i++) {

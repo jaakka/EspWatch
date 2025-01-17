@@ -49,6 +49,9 @@ float batteryVoltage = 0;
 int userScreenBrightness = SCREEN_WAKE_BRIGHTNESS;
 bool watchAwake = true;
 bool watchReadyToSleep = false;
+int bat_anim = 0;
+int bat_lev = 0;
+constexpr float voltageMultiplier = (3.3 / 4095.0) * 3.32;     // 3.32 is compensation for the voltage divider
 
 void tryStartModules() {
 
@@ -165,11 +168,44 @@ void publishFrame() {
   frame.pushSprite(0,0);
 }
 
+void drawProgressArc(int x, int y, int radius, int start_angle, int end_angle, uint16_t color, int thickness) {
+  for (int t = 0; t < thickness; t++) {
+    for (int angle = start_angle; angle < end_angle; angle++) {
+      int x1 = x + (radius - t) * cos(angle * DEG_TO_RAD);
+      int y1 = y + (radius - t) * sin(angle * DEG_TO_RAD);
+      int x2 = x + (radius - t - 1) * cos(angle * DEG_TO_RAD);
+      int y2 = y + (radius - t - 1) * sin(angle * DEG_TO_RAD);
+      frame.drawLine(x1, y1, x2, y2, color);
+    }
+  }
+}
+
 void onWakeLoop() {
   // this is only performed when the watch is awake
   touch.loop();
   handleApplications();
+
+  tempChargeAnim();
   publishFrame();
+}
+
+void tempChargeAnim(){
+  float voltage = analogRead(VoltagePin) * voltageMultiplier + 0.4;    // 0.4 is compensation for schottky diode voltage drop
+  
+  if (voltage > 5) {
+  if (bat_anim < 100) {
+    bat_anim+=2;
+  }
+  else
+  {
+    bat_anim=bat_lev; 
+    bat_lev++;
+  }
+
+    if(bat_lev>100){ bat_lev=0;}
+    drawProgressArc(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, SCREEN_WIDTH/2, 0, ((float)360/100) * bat_anim, rgb(0,100,0), 2);
+    drawProgressArc(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, SCREEN_WIDTH/2, 0, ((float)360/100) * bat_lev, rgb(0,255,0), 2);
+  }
 }
 
 void onSleepLoop() {
