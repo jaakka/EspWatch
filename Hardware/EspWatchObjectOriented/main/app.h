@@ -9,6 +9,8 @@ extern TFT_eSprite frame;
 extern TOUCH touch;
 extern const int SCREEN_WIDTH;
 extern const int SCREEN_HEIGHT;
+extern int runningApp;
+extern bool exit_application;
 
 class App {
 public:

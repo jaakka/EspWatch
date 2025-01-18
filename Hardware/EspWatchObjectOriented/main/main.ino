@@ -42,7 +42,7 @@ DEBUG debug(heartrate, gyroscope, pcf);
 // Application handling
 const int APP_COUNT = 3;
 App* apps[APP_COUNT] = {new MenuApp(), new HomeApp(), new PulseApp()};
-int runningApp = 0; // HomeApp is the default start app
+int runningApp = 1; // HomeApp is the default start app
 
 // Global variables 
 float batteryVoltage = 0;
@@ -52,6 +52,7 @@ bool watchReadyToSleep = false;
 int bat_anim = 0;
 int bat_lev = 0;
 constexpr float voltageMultiplier = (3.3 / 4095.0) * 3.32;     // 3.32 is compensation for the voltage divider
+bool exit_application = false;
 
 void tryStartModules() {
 
@@ -130,7 +131,10 @@ void LcdBrightnessSmoothController() {
 } 
 
 void handleApplications() {
-   for (int i = 0; i < APP_COUNT; i++) {
+  if(exit_application) {
+    runningApp = 0; // Open menu
+  }
+  for (int i = 0; i < APP_COUNT; i++) {
     if(i == runningApp) {
       // Handle open application
       apps[i]->handleApplication();
@@ -203,8 +207,8 @@ void tempChargeAnim(){
   }
 
     if(bat_lev>100){ bat_lev=0;}
-    drawProgressArc(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, SCREEN_WIDTH/2, 0, ((float)360/100) * bat_anim, rgb(0,100,0), 2);
-    drawProgressArc(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, SCREEN_WIDTH/2, 0, ((float)360/100) * bat_lev, rgb(0,255,0), 2);
+    drawProgressArc(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, SCREEN_WIDTH/2, 0, ((float)360/100) * bat_anim, rgb(155,155,155), 3);
+    drawProgressArc(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2, SCREEN_WIDTH/2, 0, ((float)360/100) * bat_lev, rgb(0,255,0), 3);
   }
 }
 

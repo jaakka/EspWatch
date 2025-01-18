@@ -6,7 +6,9 @@ void HomeApp::init() {
 }
 
 void HomeApp::handleApplication() {
-
+  if(touch.userSwipeUp()) {
+    exit_application = true;
+  }
 }
 
 void HomeApp::handleApplicationBackground() {

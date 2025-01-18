@@ -2,13 +2,8 @@
 
 void MenuApp::init() {
   // Init values
-  draw_x = 0;
-  draw_y = 0;
-  draw_scale = 0;
   menu_xpos = 0;
   menu_ypos = 0;
-  target_xpos = 0;
-  target_ypos = 0;
   is_dragging = false;
   last_touch = millis(); 
   last_release = millis();
@@ -17,44 +12,57 @@ void MenuApp::init() {
   near_app_id = 0;
   touch_start_x = 0;
   touch_start_y = 0;
-  application_open_scale = 0;
+  application_open_scale = 10;//4;
   debug_mode = false;
+  enable_cursor = false;
+  application_starting = false;
+  application_closing = false;
 }
 
 void MenuApp::handleApplication() {
-  if (touch.userTouch() && application_open_scale < 1.5) {
-    last_touch = millis();
-    if (!is_dragging) {
-      touch_start_x = touch.x;
-      touch_start_y = touch.y;
-      is_dragging = true;
-    } else {
-      // Relative movement
-      menu_xpos += (touch.x - touch_start_x);
-      menu_ypos += (touch.y - touch_start_y);
-      touch_start_x = touch.x;
-      touch_start_y = touch.y;
-      //Serial.println("mouseX: "+String(menu_xpos)+", mouseY:"+String(menu_ypos));
-    }
-  } else {
-    //User has released the touch
-    if(is_dragging)
+  if(!application_closing && !application_starting) {
+    if (touch.userTouch()) {
+      last_touch = millis();
+      if (!is_dragging) {
+        touch_start_x = touch.x;
+        touch_start_y = touch.y;
+        is_dragging = true;
+      } else {
+        // Relative movement
+        menu_xpos += (touch.x - touch_start_x);
+        menu_ypos += (touch.y - touch_start_y);
+        touch_start_x = touch.x;
+        touch_start_y = touch.y;
+      }
+    } 
+    else 
     {
-     /* if(last_release + 1000 > millis() && abs(menu_x-selectPosX)<5 && abs(menu_y-selectPosY)<5 && (selectedApplication == 4 || selectedApplication == 5))
+      //User has released the touch
+      if(is_dragging)
       {
-        Serial.println("start app");
-        openApp = true;
-      }*/
-      last_release = millis();
-      //getNearestApplication(menu_xpos, menu_ypos, near_app_x, near_app_y, near_app_id);
-      Serial.println("Nearest app "+String(near_app_id));
+
+        if(last_release + 1000 > millis() && distance(near_app_x, near_app_y, menu_xpos, menu_ypos) < 10)
+        {
+          Serial.println("start app");
+          application_starting = true;
+        }
+        last_release = millis();
+        Serial.println("Nearest app "+String(near_app_id));
+      }
+      is_dragging = false;
     }
-    is_dragging = false;
+
+    if (!is_dragging && last_touch + 100 < millis()) { //SmoothAjo6000
+      float target_x = SCREEN_WIDTH / 2 - near_app_x;
+      float target_y = SCREEN_HEIGHT / 2 - near_app_y;
+      smooth_move(menu_xpos,menu_ypos,near_app_x,near_app_y);
+    }
+  }
+  if (exit_application) {
+    exit_application = false;
+    applicationClosed();
   }
 
-  if (!is_dragging && last_touch + 100 < millis()) { //SmoothAjo6000
-    smooth_move(menu_xpos,menu_ypos,near_app_x,near_app_y);
-  }
 }
 
 void MenuApp::handleApplicationBackground() {
@@ -75,11 +83,12 @@ int MenuApp::checkApplicationId(int id) {
   }
 }
 
-void MenuApp::drawApplication(int x, int y, float scale) { //TODO: DRAW SELECTED APP LAST
-  draw_x = x;
-  draw_y = y;
-  draw_scale = scale;
+void MenuApp::applicationClosed() {
+  application_starting = false;
+  application_closing = true;
+}
 
+void MenuApp::drawApplication(int x, int y, float scale) { //TODO: DRAW SELECTED APP LAST
   const float scaled_width = ((float)SCREEN_WIDTH/10) * scale;
   const float scaled_height = ((float)SCREEN_HEIGHT/10) * scale;
 
@@ -190,13 +199,32 @@ void MenuApp::drawApplication(int x, int y, float scale) { //TODO: DRAW SELECTED
   }
 
   // Draw cursor
-  if (is_dragging) {
+  if (is_dragging && enable_cursor) {
     frame.fillCircle(abs_middle_x, abs_middle_y, scale, rgb(255, 255, 255));
   }
 
   near_app_id = cur_app_id;
   near_app_x = menu_xpos + (SCREEN_WIDTH / 2 - cur_app_x);
   near_app_y = menu_ypos + (SCREEN_HEIGHT / 2 - cur_app_y);
+
+
+  if(application_starting) {
+    if(application_open_scale < 10) {
+      application_open_scale+=1;
+    }else{runningApp=near_app_id;}
+    float center_x = SCREEN_WIDTH/2 - ((SCREEN_WIDTH/2)/10)*application_open_scale;
+    float center_y = SCREEN_HEIGHT/2 - ((SCREEN_HEIGHT/2)/10)*application_open_scale;
+    apps[near_app_id]->drawApplication(center_x, center_y, application_open_scale);
+  }
+
+  if(application_closing) {
+    if(application_open_scale > 4) {
+      application_open_scale-=1;
+    }else{application_closing = false;}
+    float center_x = SCREEN_WIDTH/2 - ((SCREEN_WIDTH/2)/10)*application_open_scale;
+    float center_y = SCREEN_HEIGHT/2 - ((SCREEN_HEIGHT/2)/10)*application_open_scale;
+    apps[near_app_id]->drawApplication(center_x, center_y, application_open_scale);
+  }
 }
 
 void MenuApp::drawApplicationIcon(int x, int y, float scale) {
