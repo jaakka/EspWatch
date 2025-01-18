@@ -14,6 +14,7 @@
 #include "pulseapp.h"
 #include "homeapp.h"
 #include "menuapp.h"
+#include "calculatorapp.h"
 
 const int SCREEN_WIDTH = 240;  // Screen width
 const int SCREEN_HEIGHT = 240;  // Screen height
@@ -40,8 +41,8 @@ PCF pcf;                                // Pcf in daughterboard, connected to li
 DEBUG debug(heartrate, gyroscope, pcf);
 
 // Application handling
-const int APP_COUNT = 3;
-App* apps[APP_COUNT] = {new MenuApp(), new HomeApp(), new PulseApp()};
+const int APP_COUNT = 4;
+App* apps[APP_COUNT] = {new MenuApp(), new HomeApp(), new PulseApp(), new CalculatorApp()};
 int runningApp = 1; // HomeApp is the default start app
 
 // Global variables 
@@ -246,4 +247,6 @@ void loop() {
   if(!watchAwake) {
     onSleepLoop();
   }
+  
+  LcdBrightnessSmoothController(); // Ensure this is called to update brightness
 }
