@@ -4,19 +4,28 @@
 void HomeApp::init() {
   last_release = millis();
   edit_mode = false;
+  analog_watch = true;
 }
 
 void HomeApp::handleApplication() {
-  if(touch.userSwipeUp()) {
-    exit_application = true;
+  if (!edit_mode) {
+    if(touch.userSwipeUp()) {
+      exit_application = true;
+    }
+    if(touch.userSwipeRight() && analog_watch) {
+      analog_watch = false;
+    }
+    if(touch.userSwipeLeft() && !analog_watch) {
+      analog_watch = true;
+    }
   }
+
 
   if(touch.userTouch()) {
     if (millis() - last_release > 1000) {
       float center_x = SCREEN_WIDTH / 2;
       float center_y = SCREEN_HEIGHT / 2;
       float current_angle = atan2(touch.y - center_y, touch.x - center_x);
-    if (millis() - last_release > 1000) {
       if (!edit_mode) {
         edit_mode = true;
         last_angle = current_angle;
@@ -40,8 +49,6 @@ void HomeApp::handleApplication() {
         }
       }
     }
-
-    }
   }
   else {
     // User released touch
@@ -55,6 +62,15 @@ void HomeApp::handleApplicationBackground() {
 }
 
 void HomeApp::drawApplication(int x, int y, float scale) {
+  if (analog_watch) {
+    drawAnalogWatch(x, y, scale);
+  }
+  if (!analog_watch) {
+    drawDigitalWatch(x, y, scale);
+  }
+}
+
+void HomeApp::drawAnalogWatch(int x, int y, float scale) {
   float scaled_width = ((float)SCREEN_WIDTH/10) * scale;
   float scaled_height = ((float)SCREEN_HEIGHT/10) * scale;
 
@@ -123,6 +139,39 @@ void HomeApp::drawApplication(int x, int y, float scale) {
   // Draw small middle dot
   middle_dot_size = 3;
   frame.fillCircle(middle_x, middle_y, (middle_dot_size/10) * scale , SecondColor);
+}
+
+void HomeApp::drawDigitalWatch(int x, int y, float scale) {
+  float scaled_width = ((float)SCREEN_WIDTH/10) * scale;
+  float scaled_height = ((float)SCREEN_HEIGHT/10) * scale;
+
+  float middle_x = x + scaled_width/2;
+  float middle_y = y + scaled_height/2;
+
+  // Draw background
+  frame.fillCircle(middle_x, middle_y, scaled_width/2 + 2, rgb(255, 0, 0)); // +2 fixs ghost pixels
+  
+  frame.setTextColor(rgb(255,255,255));
+
+  if (edit_mode) {
+    frame.setTextColor(rgb(0,255,0));
+  }
+
+  float font_scale = (scale/10) * 3;
+  frame.setTextSize(font_scale);
+  frame.drawCentreString(digitalTime(), middle_x, middle_y - font_scale*8, 4);
+}
+
+String HomeApp::digitalTime() {
+  return addZerosIfNeeded(hour()) + ":" + addZerosIfNeeded(minute());
+}
+
+String HomeApp::addZerosIfNeeded(int value) {
+  if(value > 9) {
+    return String(value);
+  }else{
+    return "0"+String(value);
+  }
 }
 
 void HomeApp::drawApplicationIcon(int x, int y, float scale) {
