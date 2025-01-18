@@ -2,12 +2,51 @@
 #include <TFT_eSPI.h>
 
 void HomeApp::init() {
-
+  last_release = millis();
+  edit_mode = false;
 }
 
 void HomeApp::handleApplication() {
   if(touch.userSwipeUp()) {
     exit_application = true;
+  }
+
+  if(touch.userTouch()) {
+    if (millis() - last_release > 1000) {
+      float center_x = SCREEN_WIDTH / 2;
+      float center_y = SCREEN_HEIGHT / 2;
+      float current_angle = atan2(touch.y - center_y, touch.x - center_x);
+    if (millis() - last_release > 1000) {
+      if (!edit_mode) {
+        edit_mode = true;
+        last_angle = current_angle;
+      } else {
+        // Calculate angle difference
+        float angle_diff = current_angle - last_angle;
+        
+        // Normalize angle to -PI to PI
+        if (angle_diff > PI) angle_diff -= 2 * PI;
+        if (angle_diff < -PI) angle_diff += 2 * PI;
+        
+        // Convert to minutes (60 minutes = 2PI)
+        int minute_diff = (angle_diff / (2 * PI)) * 60;
+        
+        if (abs(minute_diff) > 0) {
+          // Update time
+          time_t t = now();
+          t += minute_diff * 60; // Convert to seconds
+          setTime(t);
+          last_angle = current_angle;
+        }
+      }
+    }
+
+    }
+  }
+  else {
+    // User released touch
+    last_release = millis();
+    edit_mode = false;
   }
 }
 
@@ -56,6 +95,11 @@ void HomeApp::drawApplication(int x, int y, float scale) {
 
   // Draw minute line
   uint16_t MinuteColor = rgb(100, 100, 100);
+
+  if (edit_mode) {
+    MinuteColor = rgb(0, 255, 0);
+  }
+
   float minuteAngle = (minute() * 6) * PI / 180 - PI / 2;
   float minuteX = cos(minuteAngle) * ((scaled_width/2)*0.8) + middle_x;
   float minuteY = sin(minuteAngle) * ((scaled_height/2)*0.8) + middle_y; 

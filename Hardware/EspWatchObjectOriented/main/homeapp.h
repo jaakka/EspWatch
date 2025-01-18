@@ -12,6 +12,10 @@ public:
     void drawApplication(int x, int y, float scale) override; 
     void drawApplicationIcon(int x, int y, float scale) override; 
     bool areAvailableOnMenu() override;
+private: 
+    unsigned long last_release;
+    bool edit_mode;
+    float last_angle;
 };
 
 #endif 
