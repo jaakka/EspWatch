@@ -21,6 +21,7 @@ private:
     bool numberEntered;
     bool wasTouched;
     int currentScreen;
+    bool showresult;
 };
 
 #endif 
