@@ -8,6 +8,7 @@ void CalculatorApp::init() {
     isEnteringNumber = true;
     wasTouched = false; // Initialize the previous touch state
     currentScreen = 0; // Start with the calculator screen
+    showresult = false;
 }
 
 void CalculatorApp::handleApplication() {
@@ -29,6 +30,7 @@ void CalculatorApp::handleApplication() {
         currentScreen = 1; // Switch to operator screen
     } else if (touch.userSwipeRight()) {
         currentScreen = 0; // Switch back to calculator screen
+        showresult = false;
     }
 
     if (currentScreen == 0) {
@@ -37,7 +39,7 @@ void CalculatorApp::handleApplication() {
             int touchX = touch.x;
             int touchY = touch.y;
 
-            // Numbers in grid with two rows
+            // Assuming a simple layout where numbers are arranged in a grid
             int number = -1;
             if (touchY >= SCREEN_HEIGHT / 2 - 50 && touchY < 3 * SCREEN_HEIGHT / 4 - 50) {
                 if (touchX < SCREEN_WIDTH / 5) number = 1;
@@ -53,7 +55,17 @@ void CalculatorApp::handleApplication() {
                 else number = 0;
             } else if (touchY >= SCREEN_HEIGHT - 50) {
                 if (touchX >= 2 * SCREEN_WIDTH / 5 && touchX < 3 * SCREEN_WIDTH / 5) {
-                    if (!enteredNumber.isEmpty()) {
+                    // Handle arrow touch to remove the last added number
+                    if (!savedNumber2.isEmpty()) {
+                        savedNumber2.remove(savedNumber2.length() - 1);
+                        Serial.println("Backspace"); // Write the backspace action to the serial monitor
+                    } else if (!operatorSymbol.isEmpty()) {
+                        operatorSymbol.remove(operatorSymbol.length() - 1);
+                        Serial.println("Backspace"); // Write the backspace action to the serial monitor
+                    } else if (!savedNumber1.isEmpty()) {
+                        savedNumber1.remove(savedNumber1.length() - 1);
+                        Serial.println("Backspace"); // Write the backspace action to the serial monitor
+                    } else if (!enteredNumber.isEmpty()) {
                         enteredNumber.remove(enteredNumber.length() - 1);
                         Serial.println("Backspace"); // Write the backspace action to the serial monitor
                     }
@@ -61,7 +73,11 @@ void CalculatorApp::handleApplication() {
             }
 
             if (number != -1) {
-                enteredNumber += String(number); // Append the selected number to the enteredNumber string
+                if (!savedNumber1.isEmpty() && !operatorSymbol.isEmpty()) {
+                    savedNumber2 += String(number);
+                } else {
+                enteredNumber += String(number);
+                }
                 Serial.println(number); // Write the selected number to the serial monitor
             }
         }
@@ -72,7 +88,7 @@ void CalculatorApp::handleApplication() {
             int touchX = touch.x;
             int touchY = touch.y;
 
-            // Operation in row
+            // Assuming a simple layout where operators are arranged in a single row
             String selectedOperator = "";
             if (touchY >= SCREEN_HEIGHT / 2 - 50 && touchY < SCREEN_HEIGHT / 2 + 50) {
                 if (touchX < SCREEN_WIDTH / 6) selectedOperator = "C";
@@ -81,6 +97,23 @@ void CalculatorApp::handleApplication() {
                 else if (touchX < 4 * SCREEN_WIDTH / 6) selectedOperator = "*";
                 else if (touchX < 5 * SCREEN_WIDTH / 6) selectedOperator = "/";
                 else selectedOperator = "=";
+            } else if (touchY >= SCREEN_HEIGHT - 50) {
+                if (touchX >= 2 * SCREEN_WIDTH / 5 && touchX < 3 * SCREEN_WIDTH / 5) {
+                    // Handle arrow touch to remove the last added number
+                    if (!savedNumber2.isEmpty()) {
+                        savedNumber2.remove(savedNumber2.length() - 1);
+                        Serial.println("Backspace"); // Write the backspace action to the serial monitor
+                    } else if (!operatorSymbol.isEmpty()) {
+                        operatorSymbol.remove(operatorSymbol.length() - 1);
+                        Serial.println("Backspace"); // Write the backspace action to the serial monitor
+                    } else if (!savedNumber1.isEmpty()) {
+                        savedNumber1.remove(savedNumber1.length() - 1);
+                        Serial.println("Backspace"); // Write the backspace action to the serial monitor
+                    } else if (!enteredNumber.isEmpty()) {
+                        enteredNumber.remove(enteredNumber.length() - 1);
+                        Serial.println("Backspace"); // Write the backspace action to the serial monitor
+                    }
+                }
             }
 
             if (!selectedOperator.isEmpty()) {
@@ -109,6 +142,7 @@ void CalculatorApp::handleApplication() {
                         savedNumber1 = ""; // Clear the saved number
                         savedNumber2 = ""; // Clear the second saved number
                         operatorSymbol = ""; // Clear the operator symbol
+                        showresult = true;
                         Serial.println(result); // Write the result to the serial monitor
                     }
                 } else if (operatorSymbol.isEmpty()) {
@@ -122,7 +156,7 @@ void CalculatorApp::handleApplication() {
 }
 
 void CalculatorApp::handleApplicationBackground() {
-
+    // No background tasks for now
 }
 
 void CalculatorApp::drawApplication(int x, int y, float scale) {
@@ -134,10 +168,21 @@ void CalculatorApp::drawApplication(int x, int y, float scale) {
 
     frame.fillCircle(abs_middle_x, abs_middle_y, scaled_width / 2 + 2, rgb(255, 255, 255));
 
+    float font_scale = (scale / 10);
+    frame.setTextSize(font_scale);
+
     if (currentScreen == 0) {
         // Draw entered number
         frame.setTextColor(rgb(0, 0, 0));
-        frame.drawString(enteredNumber, abs_middle_x - 50, abs_middle_y - SCREEN_HEIGHT / 4, 4);
+    
+        // Draw saved numbers and operator symbol if they exist
+        if (!savedNumber1.isEmpty() || !operatorSymbol.isEmpty() || !savedNumber2.isEmpty()) {
+            String displayString = savedNumber1 + " " + operatorSymbol + " " + savedNumber2;
+            frame.drawString(displayString, abs_middle_x - 50, abs_middle_y - SCREEN_HEIGHT / 4, 4);
+        }
+        else if (!enteredNumber.isEmpty()) {
+            frame.drawString(enteredNumber, abs_middle_x - 50, abs_middle_y - SCREEN_HEIGHT / 4, 4);
+        }
 
         // Draw number grid
         frame.setTextColor(rgb(0, 0, 0));
@@ -155,13 +200,14 @@ void CalculatorApp::drawApplication(int x, int y, float scale) {
         // Draw arrow below the grid
         frame.setTextColor(rgb(0, 0, 0));
         frame.drawString("<-", 2 * (SCREEN_WIDTH / 5) + (SCREEN_WIDTH / 10), SCREEN_HEIGHT - 40, 4);
+        
     } else if (currentScreen == 1) {
         // Draw second screen with saved number + operator + second saved number
         frame.fillRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, rgb(255, 255, 255));
         frame.setTextColor(rgb(0, 0, 0));
-        if (operatorSymbol == "=") {
+        if (showresult == true) {
             frame.drawString(enteredNumber, abs_middle_x - 50, abs_middle_y - SCREEN_HEIGHT / 4, 4);
-        } else {
+        } else if (!savedNumber1.isEmpty() || !operatorSymbol.isEmpty() || !savedNumber2.isEmpty()) {
             String displayString = savedNumber1 + " " + operatorSymbol + " " + savedNumber2;
             frame.drawString(displayString, abs_middle_x - 50, abs_middle_y - SCREEN_HEIGHT / 4, 4);
         }
@@ -174,6 +220,10 @@ void CalculatorApp::drawApplication(int x, int y, float scale) {
             int y_pos = SCREEN_HEIGHT / 2;
             frame.drawString(operators[j], x_pos, y_pos, 4);
         }
+
+        // Draw arrow below the grid
+        frame.setTextColor(rgb(0, 0, 0));
+        frame.drawString("<-", 2 * (SCREEN_WIDTH / 5) + (SCREEN_WIDTH / 10), SCREEN_HEIGHT - 40, 4);
     }
 }
 
@@ -182,8 +232,9 @@ void CalculatorApp::drawApplicationIcon(int x, int y, float scale) {
     float scaled_height = ((float)SCREEN_HEIGHT / 10) * scale;
     frame.fillCircle(x, y, scaled_width / 2, rgb(255, 255, 255));
 
-    float icon_width = scaled_width * 0.6;
-    float icon_height = scaled_height * 0.8;
+    // Make the icon 10% smaller
+    float icon_width = scaled_width * 0.54; // 0.6 * 0.9
+    float icon_height = scaled_height * 0.72; // 0.8 * 0.9
     float icon_x = x - icon_width / 2;
     float icon_y = y - icon_height / 2;
 
