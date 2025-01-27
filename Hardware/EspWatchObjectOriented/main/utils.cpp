@@ -47,3 +47,9 @@ void smooth_move(float &current_x, float &current_y, const float &target_x, cons
         }
     }
 }
+
+void getPositionByAngle(const float x, const float y, const float angle_deg, const float distance, float &new_x, float &new_y) {
+  const float angle_rad = angle_deg * (PI / 180);
+  new_x = x + cos(angle_rad) * distance;
+  new_y = y + sin(angle_rad) * distance;
+}
