@@ -9,7 +9,7 @@
 #include "pcf.h"
 #include "debug.h"
 
-// Watch applications
+// Watch applications 
 #include "app.h"
 #include "pulseapp.h"
 #include "homeapp.h"
@@ -20,7 +20,7 @@ const int SCREEN_WIDTH = 240;  // Screen width
 const int SCREEN_HEIGHT = 240;  // Screen height
 
 #define GyroIntPin      23 // Gyroscope interrupt pin
-//#define TouchIntPin       19 // Lcd interrupt pin
+//#define TouchIntPin   19 // Lcd interrupt pin
 #define LcdBacklightPin 32 // Lcd backlight pin
 #define VoltagePin      35 // Battery voltage pin
 
