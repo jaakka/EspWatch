@@ -50,10 +50,12 @@ float batteryVoltage = 0;
 int userScreenBrightness = SCREEN_WAKE_BRIGHTNESS;
 bool watchAwake = true;
 bool watchReadyToSleep = false;
+bool watchSleeping = false;
 int bat_anim = 0;
 int bat_lev = 0;
 constexpr float voltageMultiplier = (3.3 / 4095.0) * 3.32;     // 3.32 is compensation for the voltage divider
 bool exit_application = false;
+unsigned long last_act = 0, last_wakeup = 0;
 
 void tryStartModules() {
 
@@ -108,26 +110,12 @@ void initApplications() {
 }
 
 void LcdBrightnessSmoothController() {
-  int lcdBrightness = analogRead(LcdBacklightPin);
-
-  if(watchAwake) {
-    int newBrightness = (255 * userScreenBrightness) / 100;
-
-    if(watchReadyToSleep) {
-      newBrightness = (255 * SCREEN_BEFORE_SLEEP_BRIGHTNESS) / 100;
-    }
-
-    if(lcdBrightness < newBrightness) {
-      analogWrite(LcdBacklightPin, lcdBrightness + 1);
-    } else if(lcdBrightness > newBrightness) {
-      analogWrite(LcdBacklightPin, lcdBrightness - 1);
-    }
-  }
-
-  if(!watchAwake) { 
-    if(lcdBrightness > 0) {
-      analogWrite(LcdBacklightPin, lcdBrightness - 1);
-    } 
+  if(!watchSleeping) {
+    int sensor = pcf.readLightSensor();
+    sensor = map(sensor, 5, 160, 10, 255);
+    if(sensor>255){sensor=255;} else if(sensor<10){sensor=10;}
+    analogWrite(LcdBacklightPin, sensor);
+    userScreenBrightness = sensor;
   }
 } 
 
@@ -155,17 +143,14 @@ void onBoot() {
   initScreen();
   tryStartModules();
   initApplications();
-  //gpio_wakeup_enable(GPIO_NUM_19, GPIO_INTR_LOW_LEVEL);       // Lisätään herätys touch int pinnistä
-  //gpio_wakeup_enable(GPIO_NUM_23, GPIO_INTR_HIGH_LEVEL);      // Lisätään herätys gyro int pinnistä
-  //esp_sleep_enable_gpio_wakeup();
-  //Serial.println("lepotilaan siirtyminen");
-  delay(1000);
-  //esp_light_sleep_start();
+  pcf.enableLightSensor();
 }
 
 void allTimeLoop() { 
   // this is performed continuously, regardless of the state of the clock
-
+  if(!watchSleeping && (last_act+10000 < millis())) {
+    goToSleep();
+  }
   LcdBrightnessSmoothController();
 }
 
@@ -187,9 +172,9 @@ void drawProgressArc(int x, int y, int radius, int start_angle, int end_angle, u
 
 void onWakeLoop() {
   // this is only performed when the watch is awake
-  touch.loop();
+  if(last_wakeup+1000 < millis()){touch.loop();}
+  if(touch.userTouch()){last_act = millis();}
   handleApplications();
-
   tempChargeAnim();
   publishFrame();
 }
@@ -219,10 +204,46 @@ void onSleepLoop() {
 
 void wakeUpFromSleep() {
   // this is executed once when the clock wakes up
+  heartrate.enableSensor();
+  pcf.enableLightSensor();
+  unDimLcdBeforeSleep();
+  watchSleeping = false;
+  last_act = millis();
+  last_wakeup = millis();
+}
+
+void dimLcdBeforeSleep() {
+  int bright = userScreenBrightness;
+  while(bright > 0) {
+    bright--;
+    analogWrite(LcdBacklightPin, bright);
+    delay(10);
+  }
+}
+
+void unDimLcdBeforeSleep() {
+  int sensor = pcf.readLightSensor();
+  sensor = map(sensor, 5, 160, 10, 255);
+  if(sensor>255){sensor=255;} else if(sensor<10){sensor=10;}
+  int bright = 0;
+  while(bright < sensor) {
+    bright++;
+    analogWrite(LcdBacklightPin, bright);
+    delay(10);
+  }
 }
 
 void goToSleep() {
   // this is executed once when the clock goes to sleep
+    watchSleeping = true; // this disables screen light controller
+    dimLcdBeforeSleep();
+    heartrate.disableSensor();
+    pcf.disableLightSensor();
+    gpio_wakeup_enable(GPIO_NUM_19, GPIO_INTR_LOW_LEVEL);       //  Lisätään herätys touch int pinnistä
+    //gpio_wakeup_enable(GPIO_NUM_23, GPIO_INTR_HIGH_LEVEL);      // Lisätään herätys gyro int pinnistä
+    esp_sleep_enable_gpio_wakeup();
+    esp_light_sleep_start();
+    wakeUpFromSleep();
 }
 
 void gyroInterrupt() {
@@ -242,11 +263,9 @@ void loop() {
 
   if(watchAwake) {
     onWakeLoop();
-  } 
-
+  }
+   
   if(!watchAwake) {
     onSleepLoop();
   }
-  
-  LcdBrightnessSmoothController(); // Ensure this is called to update brightness
 }
