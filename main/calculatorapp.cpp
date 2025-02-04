@@ -12,7 +12,7 @@ void CalculatorApp::init() {
 }
 
 void CalculatorApp::handleApplication() {
-    if (touch.userSwipeUp()) {
+    if (currentScreen == 0 && touch.userSwipeUp()) {
         exit_application = true;
         enteredNumber = ""; // Reset entered numbers when exiting the app
         savedNumber1 = ""; // Reset saved number when exiting the app
@@ -36,7 +36,7 @@ void CalculatorApp::handleApplication() {
     if (currentScreen == 0) {
         bool isTouched = touch.userTouch();
         if (isEnteringNumber && isTouched && !wasTouched) {
-            int touchX = touch.x;
+            int touchX = touch.x - 10;
             int touchY = touch.y;
 
             // Assuming a simple layout where numbers are arranged in a grid
@@ -91,11 +91,12 @@ void CalculatorApp::handleApplication() {
             // Assuming a simple layout where operators are arranged in a single row
             String selectedOperator = "";
             if (touchY >= SCREEN_HEIGHT / 2 - 50 && touchY < SCREEN_HEIGHT / 2 + 50) {
-                if (touchX < SCREEN_WIDTH / 6) selectedOperator = "C";
-                else if (touchX < 2 * SCREEN_WIDTH / 6) selectedOperator = "+";
-                else if (touchX < 3 * SCREEN_WIDTH / 6) selectedOperator = "-";
-                else if (touchX < 4 * SCREEN_WIDTH / 6) selectedOperator = "*";
-                else if (touchX < 5 * SCREEN_WIDTH / 6) selectedOperator = "/";
+                if (touchX < SCREEN_WIDTH / 3) selectedOperator = "C";
+                else if (touchX < 2 * SCREEN_WIDTH / 3) selectedOperator = "+";
+                else selectedOperator = "-";
+            } else if (touchY >= SCREEN_HEIGHT / 2 + 50 && touchY < SCREEN_HEIGHT / 2 + 150) {
+                if (touchX < SCREEN_WIDTH / 3) selectedOperator = "*";
+                else if (touchX < 2 * SCREEN_WIDTH / 3) selectedOperator = "/";
                 else selectedOperator = "=";
             } else if (touchY >= SCREEN_HEIGHT - 50) {
                 if (touchX >= 2 * SCREEN_WIDTH / 5 && touchX < 3 * SCREEN_WIDTH / 5) {
@@ -149,6 +150,7 @@ void CalculatorApp::handleApplication() {
                     operatorSymbol = selectedOperator; // Set the operator symbol if it is empty
                     Serial.println(operatorSymbol); // Write the selected operator to the serial monitor
                 }
+                currentScreen = 0; // Switch back to calculator screen
             }
         }
         wasTouched = isTouched; // Update the previous touch state
@@ -171,7 +173,7 @@ void CalculatorApp::drawApplication(int x, int y, float scale) {
     float font_scale = (scale / 10);
     frame.setTextSize(font_scale);
 
-    if (currentScreen == 0) {
+    if (currentScreen == 0 && scale == 10) {
         // Draw entered number
         frame.setTextColor(rgb(0, 0, 0));
     
@@ -184,6 +186,8 @@ void CalculatorApp::drawApplication(int x, int y, float scale) {
             frame.drawString(enteredNumber, abs_middle_x - 50, abs_middle_y - SCREEN_HEIGHT / 4, 4);
         }
 
+        frame.drawLine(0, abs_middle_y - SCREEN_HEIGHT / 4 + 20, SCREEN_WIDTH, abs_middle_y - SCREEN_HEIGHT / 4 + 20, rgb(0, 0, 0));
+
         // Draw number grid
         frame.setTextColor(rgb(0, 0, 0));
         for (int i = 0; i < 2; i++) {
@@ -191,9 +195,10 @@ void CalculatorApp::drawApplication(int x, int y, float scale) {
                 int number = i * 5 + j + 1;
                 if (number == 10) number = 0;
                 if (number > 10) continue;
-                int x_pos = j * (SCREEN_WIDTH / 5) + (SCREEN_WIDTH / 10);
+                int x_pos = j * (SCREEN_WIDTH / 5) + (SCREEN_WIDTH / 10) - 10;
                 int y_pos = (i + 2) * (SCREEN_HEIGHT / 4) + (SCREEN_HEIGHT / 8) - 50;
                 frame.drawString(String(number), x_pos, y_pos, 4);
+                frame.drawRect(x_pos - 10, y_pos - 10, 50, 50, rgb(0, 0, 0));
             }
         }
 
@@ -212,13 +217,19 @@ void CalculatorApp::drawApplication(int x, int y, float scale) {
             frame.drawString(displayString, abs_middle_x - 50, abs_middle_y - SCREEN_HEIGHT / 4, 4);
         }
 
+        frame.drawLine(0, abs_middle_y - SCREEN_HEIGHT / 4 + 20, SCREEN_WIDTH, abs_middle_y - SCREEN_HEIGHT / 4 + 20, rgb(0, 0, 0));
+
         // Draw operator grid
         frame.setTextColor(rgb(0, 0, 0));
         const char* operators[] = {"C", "+", "-", "*", "/", "="};
-        for (int j = 0; j < 6; j++) {
-            int x_pos = j * (SCREEN_WIDTH / 6) + (SCREEN_WIDTH / 12);
-            int y_pos = SCREEN_HEIGHT / 2;
-            frame.drawString(operators[j], x_pos, y_pos, 4);
+        for (int i = 0; i < 2; i++) {
+            for (int j = 0; j < 3; j++) {
+                int index = i * 3 + j;
+                int x_pos = j * (SCREEN_WIDTH / 3) + (SCREEN_WIDTH / 6) - 10;
+                int y_pos = (i + 1) * (SCREEN_HEIGHT / 4) + (SCREEN_HEIGHT / 8) + 10;
+                frame.drawString(operators[index], x_pos, y_pos, 4);
+                frame.drawRect(x_pos - 10, y_pos - 10, 50, 50, rgb(0, 0, 0));
+            }
         }
 
         // Draw arrow below the grid
@@ -232,9 +243,8 @@ void CalculatorApp::drawApplicationIcon(int x, int y, float scale) {
     float scaled_height = ((float)SCREEN_HEIGHT / 10) * scale;
     frame.fillCircle(x, y, scaled_width / 2, rgb(255, 255, 255));
 
-    // Make the icon 10% smaller
-    float icon_width = scaled_width * 0.54; // 0.6 * 0.9
-    float icon_height = scaled_height * 0.72; // 0.8 * 0.9
+    float icon_width = scaled_width * 0.54;
+    float icon_height = scaled_height * 0.72;
     float icon_x = x - icon_width / 2;
     float icon_y = y - icon_height / 2;
 
