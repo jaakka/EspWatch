@@ -38,8 +38,6 @@ void CalculatorApp::handleApplication() {
         if (isEnteringNumber && isTouched && !wasTouched) {
             int touchX = touch.x - 10;
             int touchY = touch.y;
-
-            // Assuming a simple layout where numbers are arranged in a grid
             int number = -1;
             if (touchY >= SCREEN_HEIGHT / 2 - 50 && touchY < 3 * SCREEN_HEIGHT / 4 - 50) {
                 if (touchX < SCREEN_WIDTH / 5) number = 1;
@@ -55,7 +53,6 @@ void CalculatorApp::handleApplication() {
                 else number = 0;
             } else if (touchY >= SCREEN_HEIGHT - 50) {
                 if (touchX >= 2 * SCREEN_WIDTH / 5 && touchX < 3 * SCREEN_WIDTH / 5) {
-                    // Handle arrow touch to remove the last added number
                     if (!savedNumber2.isEmpty()) {
                         savedNumber2.remove(savedNumber2.length() - 1);
                         Serial.println("Backspace"); // Write the backspace action to the serial monitor
@@ -87,8 +84,6 @@ void CalculatorApp::handleApplication() {
         if (isTouched && !wasTouched) {
             int touchX = touch.x;
             int touchY = touch.y;
-
-            // Assuming a simple layout where operators are arranged in a single row
             String selectedOperator = "";
             if (touchY >= SCREEN_HEIGHT / 2 - 50 && touchY < SCREEN_HEIGHT / 2 + 50) {
                 if (touchX < SCREEN_WIDTH / 3) selectedOperator = "C";
@@ -100,7 +95,6 @@ void CalculatorApp::handleApplication() {
                 else selectedOperator = "=";
             } else if (touchY >= SCREEN_HEIGHT - 50) {
                 if (touchX >= 2 * SCREEN_WIDTH / 5 && touchX < 3 * SCREEN_WIDTH / 5) {
-                    // Handle arrow touch to remove the last added number
                     if (!savedNumber2.isEmpty()) {
                         savedNumber2.remove(savedNumber2.length() - 1);
                         Serial.println("Backspace"); // Write the backspace action to the serial monitor
@@ -158,7 +152,7 @@ void CalculatorApp::handleApplication() {
 }
 
 void CalculatorApp::handleApplicationBackground() {
-    // No background tasks for now
+    // No background tasks
 }
 
 void CalculatorApp::drawApplication(int x, int y, float scale) {
@@ -167,16 +161,18 @@ void CalculatorApp::drawApplication(int x, int y, float scale) {
 
     const float abs_middle_x = x + scaled_width / 2;
     const float abs_middle_y = y + scaled_height / 2;
-
+    
     frame.fillCircle(abs_middle_x, abs_middle_y, scaled_width / 2 + 2, rgb(255, 255, 255));
+    drawApplicationIcon(abs_middle_x, abs_middle_y, 3.5);
 
     float font_scale = (scale / 10);
     frame.setTextSize(font_scale);
 
     if (currentScreen == 0 && scale == 10) {
         // Draw entered number
+        frame.fillCircle(abs_middle_x, abs_middle_y, scaled_width / 2 + 2, rgb(255, 255, 255));
         frame.setTextColor(rgb(0, 0, 0));
-    
+
         // Draw saved numbers and operator symbol if they exist
         if (!savedNumber1.isEmpty() || !operatorSymbol.isEmpty() || !savedNumber2.isEmpty()) {
             String displayString = savedNumber1 + " " + operatorSymbol + " " + savedNumber2;
